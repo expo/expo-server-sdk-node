@@ -1,8 +1,11 @@
 {
   "name": "exponent-server-sdk",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Server side library for working with Exponent using Node.js",
   "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "build": "./node_modules/.bin/babel src --out-dir lib --source-maps",
     "watch": "./node_modules/.bin/babel src --out-dir lib --source-maps --watch",
