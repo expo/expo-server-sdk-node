@@ -1,6 +1,6 @@
 {
   "name": "exponent-server-sdk",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Server side library for working with Exponent using Node.js",
   "main": "lib/index.js",
   "scripts": {
