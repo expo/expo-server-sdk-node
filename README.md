@@ -41,5 +41,5 @@ To build and watch for changes, `npm run watch`.
 
 ## See Also
 
-  * https://github.com/exponentjs/exponent-server-sdk-ruby
-  * https://github.com/exponentjs/exponent-server-sdk-python
+  * https://github.com/exponent/exponent-server-sdk-ruby
+  * https://github.com/exponent/exponent-server-sdk-python
