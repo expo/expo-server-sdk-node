@@ -36,7 +36,7 @@ export default class ExponentClient {
   }
 
   /**
-   * Sends the given messages to their recipeints via push notifications and
+   * Sends the given messages to their recipients via push notifications and
    * returns an array of push receipts. Each receipt corresponds to the message
    * at its respective index (the nth receipt is for the nth message).
    */
