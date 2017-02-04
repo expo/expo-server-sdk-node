@@ -20,7 +20,7 @@ export default class ExponentClient {
   /**
    * Returns `true` if the token is an Exponent push token
    */
-  isExponentPushToken(token: ExponentPushToken): boolean {
+  static isExponentPushToken(token: ExponentPushToken): boolean {
     return (typeof token === 'string') && token.startsWith('ExponentPushToken');
   }
 

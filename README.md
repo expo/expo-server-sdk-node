@@ -10,11 +10,11 @@ yarn add exponent-server-sdk
 ```js
 import Exponent from 'exponent-server-sdk';
 
+// To check if something is a push token
+let isPushToken = Exponent.isExponentPushToken(somePushToken);
+
 // Create a new Exponent SDK client
 let exponent = new Exponent();
-
-// To check if something is a push token
-let isPushToken = exponent.isExponentPushToken(somePushToken);
 
 // To send push notifications
 (async function() {
