@@ -4,32 +4,38 @@ Server side library for working with Exponent using Node.js
 ## Usage
 
 ```bash
-npm install --save exponent-server-sdk
+yarn add exponent-server-sdk
 ```
 
 ```js
-import {
-  isExponentPushToken,
-  sendPushNotificationAsync,
-} from 'exponent-server-sdk';
+import Exponent from 'exponent-server-sdk';
+
+// Create a new Exponent SDK client
+let exponent = new Exponent();
 
 // To check if something is a push token
-let isPushToken = isExponentPushToken(somePushToken);
+let isPushToken = exponent.isExponentPushToken(somePushToken);
 
-// To send a push notification
-(async function () {
-  await sendPushNotificationAsync({
-    exponentPushToken: 'ExponentPushToken[Re4MeUKjYWNd0FXSj8Eppr]', // The push token for the app user you want to send the notification to
-    message: "This is a test notification",
-    data: {withSome: 'data'},
-  });
+// To send push notifications
+(async function() {
+  try {
+    let receipts = await exponent.sendPushNotificationsAsync([{
+      // The push token for the app user to whom you want to send the notification
+      to: 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]',
+      sound: 'default',
+      message: 'This is a test notification',
+      data: {withSome: 'data'},
+    }]);
+    console.log(receipts);
+  } catch (error) {
+    console.error(error);
+  }
 })();
-
 ```
 
 ## Developing
 
-The source code is in the `src/` directory and babel is used to turn it into ES5 that goes in the `lib/` directory.
+The source code is in the `src/` directory and babel is used to turn it into ES5 that goes in the `build/` directory.
 
 To build, `npm run build`.
 
