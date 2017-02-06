@@ -23,7 +23,7 @@ let exponent = new Exponent();
       // The push token for the app user to whom you want to send the notification
       to: 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]',
       sound: 'default',
-      message: 'This is a test notification',
+      body: 'This is a test notification',
       data: {withSome: 'data'},
     }]);
     console.log(receipts);
