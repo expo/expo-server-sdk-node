@@ -16,7 +16,8 @@ let isPushToken = Exponent.isExponentPushToken(somePushToken);
 // Create a new Exponent SDK client
 let exponent = new Exponent();
 
-// To send push notifications
+// To send push notifications -- note that there is a limit on the number of
+// notifications you can send at once, use exponent.chunkPushNotifications()
 (async function() {
   try {
     let receipts = await exponent.sendPushNotificationsAsync([{

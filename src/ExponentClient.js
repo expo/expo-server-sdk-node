@@ -39,6 +39,10 @@ export default class ExponentClient {
    * Sends the given messages to their recipients via push notifications and
    * returns an array of push receipts. Each receipt corresponds to the message
    * at its respective index (the nth receipt is for the nth message).
+   *
+   * There is a limit on the number of push notifications you can send at once.
+   * Use `chunkPushNotifications` to divide an array of push notification
+   * messages into appropriately sized chunks.
    */
   async sendPushNotificationsAsync(
     messages: ExponentPushMessage[],
@@ -59,6 +63,24 @@ export default class ExponentClient {
     }
 
     return data;
+  }
+
+  chunkPushNotifications(
+    messages: ExponentPushMessage[],
+  ): ExponentPushMessage[][] {
+    // Since we can't automatically upgrade everyone using this library, we
+    // should strongly try not to decrease it
+    const chunkLimit = 100;
+    let chunks = [];
+    let chunk = [];
+    for (let message of messages) {
+      chunk.push(message);
+      if (chunk.length >= chunkLimit) {
+        chunks.push(chunk);
+        chunk = [];
+      }
+    }
+    return chunks;
   }
 
   async _requestAsync(
