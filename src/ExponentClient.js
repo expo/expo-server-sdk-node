@@ -9,9 +9,10 @@
  */
 import invariant from 'invariant';
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
+import zlib from 'zlib';
 
-const BASE_URL = 'https://exp.host/';
-const BASE_API_URL = `${BASE_URL}--/api/v2`;
+const BASE_URL = 'https://exp.host';
+const BASE_API_URL = `${BASE_URL}/--/api/v2`;
 
 // TODO: Eventually we'll want to have developers authenticate. Right now it's
 // not necessary because push notifications are the only API we have and the
@@ -50,6 +51,9 @@ export default class ExponentClient {
     let data = await this._requestAsync(`${BASE_API_URL}/push/send`, {
       httpMethod: 'post',
       body: messages,
+      shouldCompress(body) {
+        return body.length > 1024;
+      },
     });
 
     if (!Array.isArray(data) || data.length !== messages.length) {
@@ -98,7 +102,15 @@ export default class ExponentClient {
       }),
     };
     if (options.body != null) {
-      fetchOptions.body = JSON.stringify(options.body);
+      let json = JSON.stringify(options.body);
+      invariant(json != null, `JSON request body must not be null`);
+      if (options.shouldCompress(json)) {
+        fetchOptions.body = await _gzipAsync(Buffer.from(json));
+        fetchOptions.headers.set('Content-Encoding', 'gzip');
+      } else {
+        fetchOptions.body = json;
+      }
+
       fetchOptions.headers.set('Content-Type', 'application/json');
     }
 
@@ -192,6 +204,18 @@ export default class ExponentClient {
   }
 }
 
+function _gzipAsync(data: Buffer): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    zlib.gzip(data, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+}
+
 export type ExponentPushToken = string;
 
 export type ExponentPushMessage = {
@@ -218,6 +242,7 @@ export type ExponentPushReceipt = {
 type RequestOptions = {
   httpMethod: 'get' | 'post',
   body?: any,
+  shouldCompress: (body: string) => boolean,
 };
 
 type ApiResult = {

@@ -9,8 +9,13 @@
   "scripts": {
     "babel": "babel",
     "build": "./build.sh",
-    "watch": "babel src --out-dir lib --source-maps --watch",
-    "prepublish": "npm run build"
+    "jest": "jest",
+    "prepublish": "npm run build",
+    "watch": "babel src --out-dir build --ignore __tests__ --source-maps --watch"
+  },
+  "jest": {
+    "roots": ["<rootDir>/src/"],
+    "testEnvironment": "node"
   },
   "repository": {
     "type": "git",
@@ -41,6 +46,7 @@
     "babel-preset-es2016": "^6.11.3",
     "babel-preset-es2017": "^6.14.0",
     "babel-preset-stage-1": "^6.13.0",
-    "babel-preset-stage-2": "^6.13.0"
+    "babel-preset-stage-2": "^6.13.0",
+    "jest": "^18.1.0"
   }
 }
