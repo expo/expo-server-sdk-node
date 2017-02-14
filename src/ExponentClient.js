@@ -18,6 +18,12 @@ const BASE_API_URL = `${BASE_URL}/--/api/v2`;
 // not necessary because push notifications are the only API we have and the
 // push tokens are secret anyway.
 export default class ExponentClient {
+  _httpAgent: ?HttpAgent;
+
+  constructor(options: ExponentClientOptions = {}) {
+    this._httpAgent = options.httpAgent;
+  }
+
   /**
    * Returns `true` if the token is an Exponent push token
    */
@@ -100,6 +106,7 @@ export default class ExponentClient {
         'Accept-Encoding': 'gzip, deflate',
         'User-Agent': `exponent-server-sdk-node/${sdkVersion}`,
       }),
+      agent: this._httpAgent,
     };
     if (options.body != null) {
       let json = JSON.stringify(options.body);
@@ -215,6 +222,12 @@ function _gzipAsync(data: Buffer): Promise<Buffer> {
     });
   });
 }
+
+export type ExponentClientOptions = {
+  httpAgent?: HttpAgent,
+};
+
+type HttpAgent = Object;
 
 export type ExponentPushToken = string;
 

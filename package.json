@@ -14,7 +14,9 @@
     "watch": "babel src --out-dir build --ignore __tests__ --source-maps --watch"
   },
   "jest": {
-    "roots": ["<rootDir>/src/"],
+    "roots": [
+      "<rootDir>/src/"
+    ],
     "testEnvironment": "node"
   },
   "repository": {
