@@ -2,8 +2,8 @@
  * exponent-server-sdk
  *
  * Use this if you are running Node on your server backend when you are working
- * with Exponent
- * https://getexponent.com
+ * with Expo
+ * https://expo.io
  *
  * @flow
  */
@@ -13,6 +13,12 @@ import zlib from 'zlib';
 
 const BASE_URL = 'https://exp.host';
 const BASE_API_URL = `${BASE_URL}/--/api/v2`;
+/**
+* The max number of push notifications to be sent at once.
+* Since we can't automatically upgrade everyone using this library, we
+* should strongly try not to decrease it
+*/
+const CHUNK_LIMIT = 100;
 
 // TODO: Eventually we'll want to have developers authenticate. Right now it's
 // not necessary because push notifications are the only API we have and the
@@ -28,7 +34,9 @@ export default class ExponentClient {
    * Returns `true` if the token is an Exponent push token
    */
   static isExponentPushToken(token: ExponentPushToken): boolean {
-    return (typeof token === 'string') && token.startsWith('ExponentPushToken');
+    return (typeof token === 'string') &&
+      token.startsWith('ExponentPushToken[') &&
+      token[token.length - 1] === ']';
   }
 
   /**
@@ -78,14 +86,11 @@ export default class ExponentClient {
   chunkPushNotifications(
     messages: ExponentPushMessage[],
   ): ExponentPushMessage[][] {
-    // Since we can't automatically upgrade everyone using this library, we
-    // should strongly try not to decrease it
-    const chunkLimit = 100;
     let chunks = [];
     let chunk = [];
     for (let message of messages) {
       chunk.push(message);
-      if (chunk.length >= chunkLimit) {
+      if (chunk.length >= CHUNK_LIMIT) {
         chunks.push(chunk);
         chunk = [];
       }
@@ -242,6 +247,9 @@ export type ExponentPushMessage = {
   priority?: 'default' | 'normal' | 'high',
   badge?: number,
 };
+
+// Expose this as prop, so users don't have to hardcode
+ExponentClient.chunkSize = CHUNK_LIMIT;
 
 export type ExponentPushReceipt = {
   status: 'ok' | 'error',
