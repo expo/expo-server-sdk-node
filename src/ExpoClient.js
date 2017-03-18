@@ -25,7 +25,7 @@ const PUSH_NOTIFICATION_CHUNK_LIMIT = 100;
 // not necessary because push notifications are the only API we have and the
 // push tokens are secret anyway.
 export default class ExpoClient {
-  static pushNotificationChunkCapacity = PUSH_NOTIFICATION_CHUNK_LIMIT;
+  static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
 
   _httpAgent: ?HttpAgent;
 

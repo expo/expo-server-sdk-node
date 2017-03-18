@@ -20,5 +20,5 @@ it('can chunk small lists of push notification messages', () => {
 });
 
 it('defines the push notification chunk size', () => {
-  expect(ExpoClient.pushNotificationChunkCapacity).toBeDefined();
+  expect(ExpoClient.pushNotificationChunkSizeLimit).toBeDefined();
 });
