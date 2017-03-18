@@ -1,8 +1,8 @@
 {
   "name": "exponent-server-sdk",
-  "version": "2.2.0",
-  "description": "Server side library for working with Exponent using Node.js",
-  "main": "build/ExponentClient.js",
+  "version": "2.3.0",
+  "description": "Server side library for working with Expo using Node.js",
+  "main": "build/ExpoClient.js",
   "files": [
     "build"
   ],
@@ -11,6 +11,7 @@
     "build": "./build.sh",
     "jest": "jest",
     "prepublish": "npm run build",
+    "test": "jest",
     "watch": "babel src --out-dir build --ignore __tests__ --source-maps --watch"
   },
   "jest": {
@@ -28,7 +29,7 @@
     "react-native",
     "push-notifications"
   ],
-  "author": "support@getexponent.com",
+  "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/exponent/exponent-server-sdk-node/issues"
@@ -42,6 +43,7 @@
   "devDependencies": {
     "babel-cli": "^6.14.0",
     "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-transform-class-properties": "^6.23.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-plugin-transform-runtime": "^6.15.0",
     "babel-preset-es2015": "^6.14.0",

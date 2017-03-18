@@ -13,17 +13,20 @@ import zlib from 'zlib';
 
 const BASE_URL = 'https://exp.host';
 const BASE_API_URL = `${BASE_URL}/--/api/v2`;
+
 /**
-* The max number of push notifications to be sent at once.
-* Since we can't automatically upgrade everyone using this library, we
-* should strongly try not to decrease it
-*/
-const CHUNK_LIMIT = 100;
+ * The max number of push notifications to be sent at once. Since we can't
+ * automatically upgrade everyone using this library, we should strongly try not
+ * to decrease it.
+ */
+const PUSH_NOTIFICATION_CHUNK_LIMIT = 100;
 
 // TODO: Eventually we'll want to have developers authenticate. Right now it's
 // not necessary because push notifications are the only API we have and the
 // push tokens are secret anyway.
 export default class ExponentClient {
+  static pushNotificationChunkCapacity = PUSH_NOTIFICATION_CHUNK_LIMIT;
+
   _httpAgent: ?HttpAgent;
 
   constructor(options: ExponentClientOptions = {}) {
@@ -90,11 +93,16 @@ export default class ExponentClient {
     let chunk = [];
     for (let message of messages) {
       chunk.push(message);
-      if (chunk.length >= CHUNK_LIMIT) {
+      if (chunk.length >= PUSH_NOTIFICATION_CHUNK_LIMIT) {
         chunks.push(chunk);
         chunk = [];
       }
     }
+
+    if (chunk.length) {
+      chunks.push(chunk);
+    }
+
     return chunks;
   }
 
@@ -247,9 +255,6 @@ export type ExponentPushMessage = {
   priority?: 'default' | 'normal' | 'high',
   badge?: number,
 };
-
-// Expose this as prop, so users don't have to hardcode
-ExponentClient.chunkSize = CHUNK_LIMIT;
 
 export type ExponentPushReceipt = {
   status: 'ok' | 'error',
