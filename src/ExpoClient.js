@@ -1,5 +1,5 @@
 /**
- * exponent-server-sdk
+ * expo-server-sdk
  *
  * Use this if you are running Node on your server backend when you are working
  * with Expo
@@ -24,30 +24,37 @@ const PUSH_NOTIFICATION_CHUNK_LIMIT = 100;
 // TODO: Eventually we'll want to have developers authenticate. Right now it's
 // not necessary because push notifications are the only API we have and the
 // push tokens are secret anyway.
-export default class ExponentClient {
+export default class ExpoClient {
   static pushNotificationChunkCapacity = PUSH_NOTIFICATION_CHUNK_LIMIT;
 
   _httpAgent: ?HttpAgent;
 
-  constructor(options: ExponentClientOptions = {}) {
+  constructor(options: ExpoClientOptions = {}) {
     this._httpAgent = options.httpAgent;
   }
 
   /**
-   * Returns `true` if the token is an Exponent push token
+   * Returns `true` if the token is an Expo push token
    */
-  static isExponentPushToken(token: ExponentPushToken): boolean {
+  static isExpoPushToken(token: ExpoPushToken): boolean {
     return (typeof token === 'string') &&
       token.startsWith('ExponentPushToken[') &&
-      token[token.length - 1] === ']';
+      token.endsWith(']');
+  }
+
+  /**
+   * Legacy alias for isExpoPushToken
+   */
+  static isExponentPushToken(token: ExpoPushToken): boolean {
+    return ExpoClient.isExpoPushToken(token);
   }
 
   /**
    * Sends the given message to its recipient via a push notification
    */
   async sendPushNotificationAsync(
-    message: ExponentPushMessage,
-  ): Promise<ExponentPushReceipt> {
+    message: ExpoPushMessage,
+  ): Promise<ExpoPushReceipt> {
     let receipts = await this.sendPushNotificationsAsync([message]);
     invariant(receipts.length === 1, `Expected exactly one push receipt`);
     return receipts[0];
@@ -63,8 +70,8 @@ export default class ExponentClient {
    * messages into appropriately sized chunks.
    */
   async sendPushNotificationsAsync(
-    messages: ExponentPushMessage[],
-  ): Promise<ExponentPushReceipt[]> {
+    messages: ExpoPushMessage[],
+  ): Promise<ExpoPushReceipt[]> {
     let data = await this._requestAsync(`${BASE_API_URL}/push/send`, {
       httpMethod: 'post',
       body: messages,
@@ -87,8 +94,8 @@ export default class ExponentClient {
   }
 
   chunkPushNotifications(
-    messages: ExponentPushMessage[],
-  ): ExponentPushMessage[][] {
+    messages: ExpoPushMessage[],
+  ): ExpoPushMessage[][] {
     let chunks = [];
     let chunk = [];
     for (let message of messages) {
@@ -236,16 +243,16 @@ function _gzipAsync(data: Buffer): Promise<Buffer> {
   });
 }
 
-export type ExponentClientOptions = {
+export type ExpoClientOptions = {
   httpAgent?: HttpAgent,
 };
 
 type HttpAgent = Object;
 
-export type ExponentPushToken = string;
+export type ExpoPushToken = string;
 
-export type ExponentPushMessage = {
-  to: ExponentPushToken,
+export type ExpoPushMessage = {
+  to: ExpoPushToken,
   data?: Object,
   title?: string,
   body?: string,
@@ -256,12 +263,12 @@ export type ExponentPushMessage = {
   badge?: number,
 };
 
-export type ExponentPushReceipt = {
+export type ExpoPushReceipt = {
   status: 'ok' | 'error',
   details?: {
     error?: 'DeviceNotRegistered' | 'MessageTooBig' | 'MessageRateExceeded',
   },
-  // Internal field used only by developers working on Exponent
+  // Internal field used only by developers working on Expo
   __debug?: any,
 };
 

@@ -8,19 +8,19 @@ yarn add exponent-server-sdk
 ```
 
 ```js
-import Exponent from 'exponent-server-sdk';
+import Expo from 'exponent-server-sdk';
 
 // To check if something is a push token
-let isPushToken = Exponent.isExponentPushToken(somePushToken);
+let isPushToken = Expo.isExponentPushToken(somePushToken);
 
-// Create a new Exponent SDK client
-let exponent = new Exponent();
+// Create a new Expo SDK client
+let expo = new Expo();
 
 // To send push notifications -- note that there is a limit on the number of
-// notifications you can send at once, use exponent.chunkPushNotifications()
+// notifications you can send at once, use expo.chunkPushNotifications()
 (async function() {
   try {
-    let receipts = await exponent.sendPushNotificationsAsync([{
+    let receipts = await expo.sendPushNotificationsAsync([{
       // The push token for the app user to whom you want to send the notification
       to: 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]',
       sound: 'default',
