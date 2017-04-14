@@ -37,9 +37,11 @@ export default class ExpoClient {
    * Returns `true` if the token is an Expo push token
    */
   static isExpoPushToken(token: ExpoPushToken): boolean {
-    return (typeof token === 'string') &&
+    return (
+      typeof token === 'string' &&
       token.startsWith('ExponentPushToken[') &&
-      token.endsWith(']');
+      token.endsWith(']')
+    );
   }
 
   /**
@@ -53,7 +55,7 @@ export default class ExpoClient {
    * Sends the given message to its recipient via a push notification
    */
   async sendPushNotificationAsync(
-    message: ExpoPushMessage,
+    message: ExpoPushMessage
   ): Promise<ExpoPushReceipt> {
     let receipts = await this.sendPushNotificationsAsync([message]);
     invariant(receipts.length === 1, `Expected exactly one push receipt`);
@@ -70,7 +72,7 @@ export default class ExpoClient {
    * messages into appropriately sized chunks.
    */
   async sendPushNotificationsAsync(
-    messages: ExpoPushMessage[],
+    messages: ExpoPushMessage[]
   ): Promise<ExpoPushReceipt[]> {
     let data = await this._requestAsync(`${BASE_API_URL}/push/send`, {
       httpMethod: 'post',
@@ -83,8 +85,8 @@ export default class ExpoClient {
     if (!Array.isArray(data) || data.length !== messages.length) {
       let apiError: Object = new Error(
         `Expected Exponent to respond with ${messages.length} ` +
-        `${messages.length === 1 ? 'receipt' : 'receipts'} but got ` +
-        `${data.length}`,
+          `${messages.length === 1 ? 'receipt' : 'receipts'} but got ` +
+          `${data.length}`
       );
       apiError.data = data;
       throw apiError;
@@ -93,9 +95,7 @@ export default class ExpoClient {
     return data;
   }
 
-  chunkPushNotifications(
-    messages: ExpoPushMessage[],
-  ): ExpoPushMessage[][] {
+  chunkPushNotifications(messages: ExpoPushMessage[]): ExpoPushMessage[][] {
     let chunks = [];
     let chunk = [];
     for (let message of messages) {
@@ -113,16 +113,13 @@ export default class ExpoClient {
     return chunks;
   }
 
-  async _requestAsync(
-    url: string,
-    options: RequestOptions,
-  ): Promise<*> {
+  async _requestAsync(url: string, options: RequestOptions): Promise<*> {
     let sdkVersion = require('../package.json').version;
     let fetchOptions = {
       method: options.httpMethod,
       body: JSON.stringify(options.body),
       headers: new Headers({
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Accept-Encoding': 'gzip, deflate',
         'User-Agent': `exponent-server-sdk-node/${sdkVersion}`,
       }),
@@ -173,7 +170,9 @@ export default class ExpoClient {
       return await this._getTextResponseErrorAsync(response);
     }
 
-    if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
+    if (
+      !result.errors || !Array.isArray(result.errors) || !result.errors.length
+    ) {
       let apiError: Object = await this._getTextResponseErrorAsync(response);
       apiError.errorData = result;
       return apiError;
@@ -186,7 +185,7 @@ export default class ExpoClient {
     let text = await response.text();
     let apiError: Object = new Error(
       `Exponent responded with an error with status code ${response.status}: ` +
-      text,
+        text
     );
     apiError.statusCode = response.status;
     apiError.errorText = text;
@@ -200,13 +199,13 @@ export default class ExpoClient {
   _getErrorFromResult(result: ApiResult): Error {
     invariant(
       result.errors && result.errors.length > 0,
-      `Expected at least one error from Exponent`,
+      `Expected at least one error from Exponent`
     );
-    let [errorData, ...otherErrorData] = (result.errors);
+    let [errorData, ...otherErrorData] = result.errors;
     let error: Object = this._getErrorFromResultError(errorData);
     if (otherErrorData.length) {
-      error.others = otherErrorData.map(
-        data => this._getErrorFromResultError(data),
+      error.others = otherErrorData.map(data =>
+        this._getErrorFromResultError(data)
       );
     }
     return error;
