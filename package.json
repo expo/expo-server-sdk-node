@@ -1,5 +1,5 @@
 {
-  "name": "exponent-server-sdk",
+  "name": "expo-server-sdk",
   "version": "2.3.1",
   "description": "Server side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exponent/exponent-server-sdk-node.git"
+    "url": "git+https://github.com/expo/exponent-server-sdk-node.git"
   },
   "keywords": [
     "exponent",
@@ -32,9 +32,9 @@
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/exponent/exponent-server-sdk-node/issues"
+    "url": "https://github.com/expo/exponent-server-sdk-node/issues"
   },
-  "homepage": "https://github.com/exponent/exponent-server-sdk-node#readme",
+  "homepage": "https://github.com/expo/exponent-server-sdk-node#readme",
   "dependencies": {
     "babel-runtime": "^6.11.6",
     "invariant": "^2.2.2",
@@ -49,8 +49,6 @@
     "babel-preset-es2015": "^6.24.0",
     "babel-preset-es2016": "^6.11.3",
     "babel-preset-es2017": "^6.14.0",
-    "babel-preset-stage-1": "^6.13.0",
-    "babel-preset-stage-2": "^6.13.0",
-    "jest": "^19.0.2"
+    "jest": "^20.0.0"
   }
 }

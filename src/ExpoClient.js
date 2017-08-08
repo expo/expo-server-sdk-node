@@ -1,8 +1,7 @@
 /**
  * expo-server-sdk
  *
- * Use this if you are running Node on your server backend when you are working
- * with Expo
+ * Use this if you are running Node on your server backend when you are working with Expo
  * https://expo.io
  *
  * @flow
@@ -15,15 +14,13 @@ const BASE_URL = 'https://exp.host';
 const BASE_API_URL = `${BASE_URL}/--/api/v2`;
 
 /**
- * The max number of push notifications to be sent at once. Since we can't
- * automatically upgrade everyone using this library, we should strongly try not
- * to decrease it.
+ * The max number of push notifications to be sent at once. Since we can't automatically upgrade
+ * everyone using this library, we should strongly try not to decrease it.
  */
 const PUSH_NOTIFICATION_CHUNK_LIMIT = 100;
 
-// TODO: Eventually we'll want to have developers authenticate. Right now it's
-// not necessary because push notifications are the only API we have and the
-// push tokens are secret anyway.
+// TODO: Eventually we'll want to have developers authenticate. Right now it's not necessary because
+// push notifications are the only API we have and the push tokens are secret anyway.
 export default class ExpoClient {
   static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
 
@@ -39,7 +36,7 @@ export default class ExpoClient {
   static isExpoPushToken(token: ExpoPushToken): boolean {
     return (
       typeof token === 'string' &&
-      token.startsWith('ExponentPushToken[') &&
+      (token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[')) &&
       token.endsWith(']')
     );
   }
@@ -54,26 +51,22 @@ export default class ExpoClient {
   /**
    * Sends the given message to its recipient via a push notification
    */
-  async sendPushNotificationAsync(
-    message: ExpoPushMessage
-  ): Promise<ExpoPushReceipt> {
+  async sendPushNotificationAsync(message: ExpoPushMessage): Promise<ExpoPushReceipt> {
     let receipts = await this.sendPushNotificationsAsync([message]);
     invariant(receipts.length === 1, `Expected exactly one push receipt`);
     return receipts[0];
   }
 
   /**
-   * Sends the given messages to their recipients via push notifications and
-   * returns an array of push receipts. Each receipt corresponds to the message
-   * at its respective index (the nth receipt is for the nth message).
+   * Sends the given messages to their recipients via push notifications and returns an array of
+   * push receipts. Each receipt corresponds to the message at its respective index (the nth receipt
+   * is for the nth message).
    *
-   * There is a limit on the number of push notifications you can send at once.
-   * Use `chunkPushNotifications` to divide an array of push notification
-   * messages into appropriately sized chunks.
+   * There is a limit on the number of push notifications you can send at once. Use
+   * `chunkPushNotifications` to divide an array of push notification messages into appropriately
+   * sized chunks.
    */
-  async sendPushNotificationsAsync(
-    messages: ExpoPushMessage[]
-  ): Promise<ExpoPushReceipt[]> {
+  async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushReceipt[]> {
     let data = await this._requestAsync(`${BASE_API_URL}/push/send`, {
       httpMethod: 'post',
       body: messages,
@@ -121,7 +114,7 @@ export default class ExpoClient {
       headers: new Headers({
         Accept: 'application/json',
         'Accept-Encoding': 'gzip, deflate',
-        'User-Agent': `exponent-server-sdk-node/${sdkVersion}`,
+        'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
       }),
       agent: this._httpAgent,
     };
@@ -170,9 +163,7 @@ export default class ExpoClient {
       return await this._getTextResponseErrorAsync(response);
     }
 
-    if (
-      !result.errors || !Array.isArray(result.errors) || !result.errors.length
-    ) {
+    if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
       let apiError: Object = await this._getTextResponseErrorAsync(response);
       apiError.errorData = result;
       return apiError;
@@ -184,8 +175,7 @@ export default class ExpoClient {
   async _getTextResponseErrorAsync(response: FetchResponse): Promise<Error> {
     let text = await response.text();
     let apiError: Object = new Error(
-      `Exponent responded with an error with status code ${response.status}: ` +
-        text
+      `Exponent responded with an error with status code ${response.status}: ` + text
     );
     apiError.statusCode = response.status;
     apiError.errorText = text;
@@ -193,8 +183,8 @@ export default class ExpoClient {
   }
 
   /**
-   * Returns an error for the first API error in the result, with an optional
-   * `others` field that contains any other errors.
+   * Returns an error for the first API error in the result, with an optional `others` field that
+   * contains any other errors.
    */
   _getErrorFromResult(result: ApiResult): Error {
     invariant(
@@ -204,9 +194,7 @@ export default class ExpoClient {
     let [errorData, ...otherErrorData] = result.errors;
     let error: Object = this._getErrorFromResultError(errorData);
     if (otherErrorData.length) {
-      error.others = otherErrorData.map(data =>
-        this._getErrorFromResultError(data)
-      );
+      error.others = otherErrorData.map(data => this._getErrorFromResultError(data));
     }
     return error;
   }
