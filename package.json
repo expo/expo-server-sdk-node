@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/expo/exponent-server-sdk-node.git"
+    "url": "git+https://github.com/expo/expo-server-sdk-node.git"
   },
   "keywords": [
     "exponent",
@@ -32,9 +32,9 @@
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/expo/exponent-server-sdk-node/issues"
+    "url": "https://github.com/expo/expo-server-sdk-node/issues"
   },
-  "homepage": "https://github.com/expo/exponent-server-sdk-node#readme",
+  "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
     "babel-runtime": "^6.11.6",
     "invariant": "^2.2.2",

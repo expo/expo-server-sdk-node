@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/expo-server-sdk
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+      - run:
+          name: Install Yarn
+          command: curl -o- -L https://yarnpkg.com/install.sh | bash
+      - restore_cache:
+          key: yarn-cache
+      - run:
+          name: Install npm Packages
+          command: yarn
+      - save_cache:
+          key: yarn-cache
+          paths:
+            - ~/.cache/yarn
+      - run:
+          name: Run Tests
+          command: yarn test -- --coverage
+      - run:
+          name: Upload results to Codecov
+          command: bash <(curl -s https://codecov.io/bash)

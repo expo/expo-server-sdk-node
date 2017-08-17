@@ -1,5 +1,5 @@
 # expo-server-sdk-node
-Server side library for working with Exponent using Node.js
+Server side library for working with Expo using Node.js
 
 ## Usage
 
@@ -69,5 +69,5 @@ To build and watch for changes, `npm run watch`.
 
 ## See Also
 
-  * https://github.com/exponent/expo-server-sdk-ruby
-  * https://github.com/exponent/expo-server-sdk-python
+  * https://github.com/expo/expo-server-sdk-ruby
+  * https://github.com/expo/expo-server-sdk-python
