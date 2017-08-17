@@ -246,7 +246,7 @@ export type ExpoPushMessage = {
   sound?: 'default' | null,
   ttl?: number,
   expiration?: number,
-  priority?: 'default' | 'normal' | 'high',
+  priority?: 'default' | 'normal' | 'high' | 'max',
   badge?: number,
 };
 
