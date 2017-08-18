@@ -1,4 +1,4 @@
-# expo-server-sdk-node
+# expo-server-sdk-node [![CircleCI](https://circleci.com/gh/expo/exponent-server-sdk-node.svg?style=svg)](https://circleci.com/gh/expo/exponent-server-sdk-node) [![codecov](https://codecov.io/gh/expo/exponent-server-sdk-node/branch/master/graph/badge.svg)](https://codecov.io/gh/expo/exponent-server-sdk-node)
 Server side library for working with Expo using Node.js
 
 ## Usage
@@ -34,7 +34,7 @@ for (let pushToken of somePushTokens) {
 }
 
 // The Expo push notification service accepts batches of notifications so
-// that you don't need to send 1000 requests to send 1000 notifications. We 
+// that you don't need to send 1000 requests to send 1000 notifications. We
 // recommend you batch your notifications to reduce the number of requests
 // and to compress them (notifications with similar content will get
 // compressed).
