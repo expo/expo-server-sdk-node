@@ -138,13 +138,20 @@ export default class ExpoClient {
       throw apiError;
     }
 
+    let textBody: ?string;
     // We expect the API response body to be JSON
     let result: ApiResult;
     try {
-      result = await response.json();
+      // Grab the body first and then try to parse it.
+      // Fetch body can only be retrieved once as it is a stream.
+      textBody = await response.text();
+      result = JSON.parse(textBody);
     } catch (e) {
-      let apiError = await this._getTextResponseErrorAsync(response);
-      throw apiError;
+      if (textBody) {
+        let apiError = await this._getTextResponseErrorAsync(response, textBody);
+        throw apiError;
+      }
+      throw e;
     }
 
     if (result.errors) {
@@ -156,15 +163,22 @@ export default class ExpoClient {
   }
 
   async _parseErrorResponseAsync(response: FetchResponse): Promise<Error> {
+    let textBody: ?string;
     let result: ApiResult;
     try {
-      result = await response.json();
+      // Grab the body first and then try to parse it.
+      // Fetch body can only be retrieved once as it is a stream.
+      textBody = await response.text();
+      result = JSON.parse(textBody);
     } catch (e) {
-      return await this._getTextResponseErrorAsync(response);
+      if (textBody) {
+        return await this._getTextResponseErrorAsync(response, textBody);
+      }
+      return e;
     }
 
     if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
-      let apiError: Object = await this._getTextResponseErrorAsync(response);
+      let apiError: Object = await this._getTextResponseErrorAsync(response, textBody);
       apiError.errorData = result;
       return apiError;
     }
@@ -172,8 +186,7 @@ export default class ExpoClient {
     return this._getErrorFromResult(result);
   }
 
-  async _getTextResponseErrorAsync(response: FetchResponse): Promise<Error> {
-    let text = await response.text();
+  async _getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
     let apiError: Object = new Error(
       `Exponent responded with an error with status code ${response.status}: ` + text
     );
