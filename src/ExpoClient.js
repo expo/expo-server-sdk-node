@@ -138,20 +138,14 @@ export default class ExpoClient {
       throw apiError;
     }
 
-    let textBody: ?string;
+    let textBody = await response.text();
     // We expect the API response body to be JSON
     let result: ApiResult;
     try {
-      // Grab the body first and then try to parse it.
-      // Fetch body can only be retrieved once as it is a stream.
-      textBody = await response.text();
       result = JSON.parse(textBody);
     } catch (e) {
-      if (textBody) {
-        let apiError = await this._getTextResponseErrorAsync(response, textBody);
-        throw apiError;
-      }
-      throw e;
+      let apiError = await this._getTextResponseErrorAsync(response, textBody);
+      throw apiError;
     }
 
     if (result.errors) {
@@ -163,18 +157,12 @@ export default class ExpoClient {
   }
 
   async _parseErrorResponseAsync(response: FetchResponse): Promise<Error> {
-    let textBody: ?string;
+    let textBody = await response.text();
     let result: ApiResult;
     try {
-      // Grab the body first and then try to parse it.
-      // Fetch body can only be retrieved once as it is a stream.
-      textBody = await response.text();
       result = JSON.parse(textBody);
     } catch (e) {
-      if (textBody) {
-        return await this._getTextResponseErrorAsync(response, textBody);
-      }
-      return e;
+      return await this._getTextResponseErrorAsync(response, textBody);
     }
 
     if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
@@ -188,7 +176,7 @@ export default class ExpoClient {
 
   async _getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
     let apiError: Object = new Error(
-      `Exponent responded with an error with status code ${response.status}: ` + text
+      `Expo responded with an error with status code ${response.status}: ` + text
     );
     apiError.statusCode = response.status;
     apiError.errorText = text;
@@ -202,7 +190,7 @@ export default class ExpoClient {
   _getErrorFromResult(result: ApiResult): Error {
     invariant(
       result.errors && result.errors.length > 0,
-      `Expected at least one error from Exponent`
+      `Expected at least one error from Expo`
     );
     let [errorData, ...otherErrorData] = result.errors;
     let error: Object = this._getErrorFromResultError(errorData);
