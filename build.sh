@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo "🔥  Cleaning build directory"
 rm -fr build

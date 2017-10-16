@@ -1,12 +1,13 @@
 {
   "name": "expo-server-sdk",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "Server side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
   "files": [
     "build"
   ],
   "scripts": {
+    "babel": "babel",
     "build": "./build.sh",
     "prepublish": "npm run build",
     "test": "jest",
