@@ -10,17 +10,17 @@ jobs:
           name: Install Yarn
           command: curl -o- -L https://yarnpkg.com/install.sh | bash
       - restore_cache:
-          key: yarn-cache
+          key: v1-yarn-cache
       - run:
           name: Install npm Packages
           command: yarn
       - save_cache:
-          key: yarn-cache
+          key: v1-yarn-cache
           paths:
             - ~/.cache/yarn
       - run:
           name: Run Tests
-          command: yarn test -- --coverage
+          command: yarn test --coverage
       - run:
           name: Upload results to Codecov
           command: bash <(curl -s https://codecov.io/bash)
