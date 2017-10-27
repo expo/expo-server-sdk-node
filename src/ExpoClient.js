@@ -188,10 +188,7 @@ export default class ExpoClient {
    * contains any other errors.
    */
   _getErrorFromResult(result: ApiResult): Error {
-    invariant(
-      result.errors && result.errors.length > 0,
-      `Expected at least one error from Expo`
-    );
+    invariant(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
     let [errorData, ...otherErrorData] = result.errors;
     let error: Object = this._getErrorFromResultError(errorData);
     if (otherErrorData.length) {
