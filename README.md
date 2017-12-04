@@ -1,11 +1,13 @@
 # expo-server-sdk-node [![CircleCI](https://circleci.com/gh/expo/exponent-server-sdk-node.svg?style=svg)](https://circleci.com/gh/expo/exponent-server-sdk-node) [![codecov](https://codecov.io/gh/expo/exponent-server-sdk-node/branch/master/graph/badge.svg)](https://codecov.io/gh/expo/exponent-server-sdk-node)
-Server side library for working with Expo using Node.js
+Server-side library for working with Expo using Node.js.
 
 ## Usage
 
 ```bash
 yarn add expo-server-sdk
 ```
+
+**Note for Firebase:** You must have a paid plan to send push notifications with this library. As [Firebase's pricing page](https://firebase.google.com/pricing/) says, "The Spark plan allows outbound network requests only to Google-owned services."
 
 ```js
 import Expo from 'expo-server-sdk';
