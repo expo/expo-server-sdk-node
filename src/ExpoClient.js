@@ -248,14 +248,24 @@ export type ExpoPushMessage = {
   badge?: number,
 };
 
-export type ExpoPushReceipt = {
-  status: 'ok' | 'error',
+type ExpoPushSuccessReceipt = {
+  status: 'ok',
+  details?: Object,
+  // Internal field used only by developers working on Expo
+  __debug?: any,
+};
+
+type ExpoPushErrorReceipt = {
+  status: 'error',
+  message: 'string',
   details?: {
-    error?: 'DeviceNotRegistered' | 'MessageTooBig' | 'MessageRateExceeded',
+    error?: 'DeviceNotRegistered' | 'InvalidCredentials' | 'MessageTooBig' | 'MessageRateExceeded',
   },
   // Internal field used only by developers working on Expo
   __debug?: any,
 };
+
+export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post',
