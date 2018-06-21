@@ -36,8 +36,8 @@
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
     "babel-runtime": "^6.11.6",
-    "invariant": "^2.2.2",
-    "node-fetch": "^1.6.1",
+    "invariant": "^2.2.4",
+    "node-fetch": "^2.1.2",
     "promise-limit": "^2.6.0"
   },
   "devDependencies": {
@@ -49,6 +49,6 @@
     "babel-preset-es2015": "^6.24.0",
     "babel-preset-es2016": "^6.11.3",
     "babel-preset-es2017": "^6.14.0",
-    "jest": "^21.2.1"
+    "jest": "^23.1.0"
   }
 }
