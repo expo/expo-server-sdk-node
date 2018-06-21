@@ -8,6 +8,7 @@
  */
 import invariant from 'invariant';
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
+import promiseLimit from 'promise-limit';
 import zlib from 'zlib';
 
 const BASE_URL = 'https://exp.host';
@@ -19,15 +20,27 @@ const BASE_API_URL = `${BASE_URL}/--/api/v2`;
  */
 const PUSH_NOTIFICATION_CHUNK_LIMIT = 100;
 
+/**
+ * The default max number of concurrent HTTP requests to send at once and spread out the load,
+ * increasing the reliability of notification delivery.
+ */
+const DEFAULT_CONCURRENT_REQUEST_LIMIT = 6;
+
 // TODO: Eventually we'll want to have developers authenticate. Right now it's not necessary because
 // push notifications are the only API we have and the push tokens are secret anyway.
 export default class ExpoClient {
   static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
 
   _httpAgent: ?HttpAgent;
+  _limitConcurrentRequests: <T>(thunk: () => T | Promise<T>) => Promise<T>;
 
   constructor(options: ExpoClientOptions = {}) {
     this._httpAgent = options.httpAgent;
+    this._limitConcurrentRequests = promiseLimit(
+      options.maxConcurrentRequests != null
+        ? options.maxConcurrentRequests
+        : DEFAULT_CONCURRENT_REQUEST_LIMIT
+    );
   }
 
   /**
@@ -131,7 +144,7 @@ export default class ExpoClient {
       fetchOptions.headers.set('Content-Type', 'application/json');
     }
 
-    let response = await fetch(url, fetchOptions);
+    let response = await this._limitConcurrentRequests(() => fetch(url, fetchOptions));
 
     if (response.status !== 200) {
       let apiError = await this._parseErrorResponseAsync(response);
@@ -230,6 +243,7 @@ function _gzipAsync(data: Buffer): Promise<Buffer> {
 
 export type ExpoClientOptions = {
   httpAgent?: HttpAgent,
+  maxConcurrentRequests?: number,
 };
 
 type HttpAgent = Object;

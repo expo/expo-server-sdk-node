@@ -37,7 +37,8 @@
   "dependencies": {
     "babel-runtime": "^6.11.6",
     "invariant": "^2.2.2",
-    "node-fetch": "^1.6.1"
+    "node-fetch": "^1.6.1",
+    "promise-limit": "^2.6.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",
