@@ -3,21 +3,21 @@ jobs:
   build:
     working_directory: ~/expo-server-sdk
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:10
     steps:
       - checkout
       - run:
           name: Install Yarn
           command: curl -o- -L https://yarnpkg.com/install.sh | bash
       - restore_cache:
-          key: v1-yarn-cache
+          key: v1-node-modules-{{ checksum "yarn.lock" }}
       - run:
           name: Install npm Packages
           command: yarn
       - save_cache:
-          key: v1-yarn-cache
+          key: v1-node-modules-{{ checksum "yarn.lock" }}
           paths:
-            - ~/.cache/yarn
+            - node_modules
       - run:
           name: Run Tests
           command: yarn test --coverage

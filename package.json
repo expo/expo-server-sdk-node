@@ -3,21 +3,39 @@
   "version": "2.4.0",
   "description": "Server side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
+  "types": "src/ExpoClient.ts",
   "files": [
-    "build"
+    "build",
+    "src"
   ],
   "scripts": {
     "babel": "babel",
     "build": "./build.sh",
     "prepublish": "npm run build",
     "test": "jest",
-    "watch": "babel src --out-dir build --ignore __tests__ --source-maps --watch"
+    "tsc": "tsc",
+    "watch": "tsc --watch"
   },
   "jest": {
     "roots": [
       "<rootDir>/src/"
     ],
-    "testEnvironment": "node"
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig.json"
+      }
+    },
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/*.+(js|ts)"
+    ]
   },
   "repository": {
     "type": "git",
@@ -34,20 +52,14 @@
   },
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
-    "babel-runtime": "^6.11.6",
-    "invariant": "^2.2.4",
+    "@types/invariant": "^2.2.29",
+    "@types/node-fetch": "^2.1.1",
     "node-fetch": "^2.1.2",
     "promise-limit": "^2.6.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.0",
-    "babel-plugin-add-module-exports": "^0.2.1",
-    "babel-plugin-transform-class-properties": "^6.23.0",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-plugin-transform-runtime": "^6.15.0",
-    "babel-preset-es2015": "^6.24.0",
-    "babel-preset-es2016": "^6.11.3",
-    "babel-preset-es2017": "^6.14.0",
-    "jest": "^23.1.0"
+    "jest": "^23.1.0",
+    "ts-jest": "^23.0.0",
+    "typescript": "^2.9.2"
   }
 }

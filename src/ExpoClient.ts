@@ -3,10 +3,9 @@
  *
  * Use this if you are running Node on your server backend when you are working with Expo
  * https://expo.io
- *
- * @flow
  */
-import invariant from 'invariant';
+import assert from 'assert';
+import { Agent } from 'http';
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
 import promiseLimit from 'promise-limit';
 import zlib from 'zlib';
@@ -37,8 +36,8 @@ export default class ExpoClient {
   static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
   static pushNotificationReceiptChunkSizeLimit = PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT;
 
-  _httpAgent: ?HttpAgent;
-  _limitConcurrentRequests: <T>(thunk: () => T | Promise<T>) => Promise<T>;
+  _httpAgent: Agent | undefined;
+  _limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
 
   constructor(options: ExpoClientOptions = {}) {
     this._httpAgent = options.httpAgent;
@@ -82,7 +81,7 @@ export default class ExpoClient {
     });
 
     if (!Array.isArray(data) || data.length !== messages.length) {
-      let apiError: Object = new Error(
+      let apiError: ExtensibleError = new Error(
         `Expected Expo to respond with ${messages.length} ${messages.length === 1
           ? 'ticket'
           : 'tickets'} but got ${data.length}`
@@ -96,7 +95,7 @@ export default class ExpoClient {
 
   async getPushNotificationReceiptsAsync(
     receiptIds: ExpoPushReceiptId[]
-  ): Promise<{ [id: ExpoPushReceiptId]: ExpoPushReceipt }> {
+  ): Promise<{ [id: string]: ExpoPushReceipt }> {
     let data = await this._requestAsync(`${BASE_API_URL}/push/getReceipts`, {
       httpMethod: 'post',
       body: { ids: receiptIds },
@@ -106,7 +105,7 @@ export default class ExpoClient {
     });
 
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      let apiError: Object = new Error(
+      let apiError: ExtensibleError = new Error(
         `Expected Expo to respond with a map from receipt IDs to receipts but received data of another type`
       );
       apiError.data = data;
@@ -142,32 +141,35 @@ export default class ExpoClient {
     return chunks;
   }
 
-  async _requestAsync(url: string, options: RequestOptions): Promise<*> {
+  async _requestAsync(url: string, options: RequestOptions): Promise<any> {
+    let requestBody: string | Buffer | undefined;
+
     let sdkVersion = require('../package.json').version;
-    let fetchOptions = {
-      method: options.httpMethod,
-      body: JSON.stringify(options.body),
-      headers: new Headers({
-        Accept: 'application/json',
-        'Accept-Encoding': 'gzip, deflate',
-        'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
-      }),
-      agent: this._httpAgent,
-    };
+    let requestHeaders = new Headers({
+      Accept: 'application/json',
+      'Accept-Encoding': 'gzip, deflate',
+      'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
+    })
+
     if (options.body != null) {
       let json = JSON.stringify(options.body);
-      invariant(json != null, `JSON request body must not be null`);
+      assert(json != null, `JSON request body must not be null`);
       if (options.shouldCompress(json)) {
-        fetchOptions.body = await _gzipAsync(Buffer.from(json));
-        fetchOptions.headers.set('Content-Encoding', 'gzip');
+        requestBody = await _gzipAsync(Buffer.from(json));
+        requestHeaders.set('Content-Encoding', 'gzip');
       } else {
-        fetchOptions.body = json;
+        requestBody = json;
       }
 
-      fetchOptions.headers.set('Content-Type', 'application/json');
+      requestHeaders.set('Content-Type', 'application/json');
     }
 
-    let response = await this._limitConcurrentRequests(() => fetch(url, fetchOptions));
+    let response = await this._limitConcurrentRequests(() => fetch(url, {
+      method: options.httpMethod,
+      body: requestBody,
+      headers: requestHeaders,
+      agent: this._httpAgent,
+    }));
 
     if (response.status !== 200) {
       let apiError = await this._parseErrorResponseAsync(response);
@@ -202,7 +204,7 @@ export default class ExpoClient {
     }
 
     if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
-      let apiError: Object = await this._getTextResponseErrorAsync(response, textBody);
+      let apiError: ExtensibleError = await this._getTextResponseErrorAsync(response, textBody);
       apiError.errorData = result;
       return apiError;
     }
@@ -211,7 +213,7 @@ export default class ExpoClient {
   }
 
   async _getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
-    let apiError: Object = new Error(
+    let apiError: ExtensibleError = new Error(
       `Expo responded with an error with status code ${response.status}: ` + text
     );
     apiError.statusCode = response.status;
@@ -224,9 +226,9 @@ export default class ExpoClient {
    * contains any other errors.
    */
   _getErrorFromResult(result: ApiResult): Error {
-    invariant(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
-    let [errorData, ...otherErrorData] = result.errors;
-    let error: Object = this._getErrorFromResultError(errorData);
+    assert(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
+    let [errorData, ...otherErrorData] = result.errors!;
+    let error: ExtensibleError = this._getErrorFromResultError(errorData);
     if (otherErrorData.length) {
       error.others = otherErrorData.map(data => this._getErrorFromResultError(data));
     }
@@ -237,7 +239,7 @@ export default class ExpoClient {
    * Returns an error for a single API error
    */
   _getErrorFromResultError(errorData: ApiResultError): Error {
-    let error: Object = new Error(errorData.message);
+    let error: ExtensibleError = new Error(errorData.message);
     error.code = errorData.code;
 
     if (errorData.details != null) {
@@ -265,11 +267,9 @@ function _gzipAsync(data: Buffer): Promise<Buffer> {
 }
 
 export type ExpoClientOptions = {
-  httpAgent?: HttpAgent,
+  httpAgent?: Agent,
   maxConcurrentRequests?: number,
 };
-
-type HttpAgent = Object;
 
 export type ExpoPushToken = string;
 
@@ -327,3 +327,7 @@ type ApiResultError = {
   details?: any,
   stack?: string,
 };
+
+class ExtensibleError extends Error {
+  [key: string]: any;
+}
