@@ -10,12 +10,12 @@ jobs:
           name: Install Yarn
           command: curl -o- -L https://yarnpkg.com/install.sh | bash
       - restore_cache:
-          key: v1-node-modules-{{ checksum "yarn.lock" }}
+          key: v1-node-modules-{{ checksum "package.json" }}
       - run:
           name: Install npm Packages
           command: yarn
       - save_cache:
-          key: v1-node-modules-{{ checksum "yarn.lock" }}
+          key: v1-node-modules-{{ checksum "package.json" }}
           paths:
             - node_modules
       - run:
