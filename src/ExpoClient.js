@@ -21,6 +21,11 @@ const BASE_API_URL = `${BASE_URL}/--/api/v2`;
 const PUSH_NOTIFICATION_CHUNK_LIMIT = 100;
 
 /**
+ * The max number of push notification receipts to request at once.
+ */
+const PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT = 300;
+
+/**
  * The default max number of concurrent HTTP requests to send at once and spread out the load,
  * increasing the reliability of notification delivery.
  */
@@ -30,6 +35,7 @@ const DEFAULT_CONCURRENT_REQUEST_LIMIT = 6;
 // push notifications are the only API we have and the push tokens are secret anyway.
 export default class ExpoClient {
   static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
+  static pushNotificationReceiptChunkSizeLimit = PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT;
 
   _httpAgent: ?HttpAgent;
   _limitConcurrentRequests: <T>(thunk: () => T | Promise<T>) => Promise<T>;
@@ -49,37 +55,24 @@ export default class ExpoClient {
   static isExpoPushToken(token: ExpoPushToken): boolean {
     return (
       typeof token === 'string' &&
-      (token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[')) &&
-      token.endsWith(']')
+      (((token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[')) &&
+        token.endsWith(']')) ||
+        /^[a-z\d]{8}-[a-z\d]{4}-[a-z\d]{4}-[a-z\d]{4}-[a-z\d]{12}$/i.test(token))
     );
   }
 
   /**
-   * Legacy alias for isExpoPushToken
-   */
-  static isExponentPushToken(token: ExpoPushToken): boolean {
-    return ExpoClient.isExpoPushToken(token);
-  }
-
-  /**
-   * Sends the given message to its recipient via a push notification
-   */
-  async sendPushNotificationAsync(message: ExpoPushMessage): Promise<ExpoPushReceipt> {
-    let receipts = await this.sendPushNotificationsAsync([message]);
-    invariant(receipts.length === 1, `Expected exactly one push receipt`);
-    return receipts[0];
-  }
-
-  /**
    * Sends the given messages to their recipients via push notifications and returns an array of
-   * push receipts. Each receipt corresponds to the message at its respective index (the nth receipt
-   * is for the nth message).
+   * push tickets. Each ticket corresponds to the message at its respective index (the nth receipt
+   * is for the nth message) and contains a receipt ID. Later, after Expo attempts to deliver the
+   * messages to the underlying push notification services, the receipts with those IDs will be
+   * available for a period of time (approximately a day).
    *
    * There is a limit on the number of push notifications you can send at once. Use
    * `chunkPushNotifications` to divide an array of push notification messages into appropriately
    * sized chunks.
    */
-  async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushReceipt[]> {
+  async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     let data = await this._requestAsync(`${BASE_API_URL}/push/send`, {
       httpMethod: 'post',
       body: messages,
@@ -90,9 +83,31 @@ export default class ExpoClient {
 
     if (!Array.isArray(data) || data.length !== messages.length) {
       let apiError: Object = new Error(
-        `Expected Exponent to respond with ${messages.length} ` +
-          `${messages.length === 1 ? 'receipt' : 'receipts'} but got ` +
-          `${data.length}`
+        `Expected Expo to respond with ${messages.length} ${messages.length === 1
+          ? 'ticket'
+          : 'tickets'} but got ${data.length}`
+      );
+      apiError.data = data;
+      throw apiError;
+    }
+
+    return data;
+  }
+
+  async getPushNotificationReceiptsAsync(
+    receiptIds: ExpoPushReceiptId[]
+  ): Promise<{ [id: ExpoPushReceiptId]: ExpoPushReceipt }> {
+    let data = await this._requestAsync(`${BASE_API_URL}/push/getReceipts`, {
+      httpMethod: 'post',
+      body: { ids: receiptIds },
+      shouldCompress(body) {
+        return body.length > 1024;
+      },
+    });
+
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      let apiError: Object = new Error(
+        `Expected Expo to respond with a map from receipt IDs to receipts but received data of another type`
       );
       apiError.data = data;
       throw apiError;
@@ -102,11 +117,19 @@ export default class ExpoClient {
   }
 
   chunkPushNotifications(messages: ExpoPushMessage[]): ExpoPushMessage[][] {
+    return this._chunkItems(messages, PUSH_NOTIFICATION_CHUNK_LIMIT);
+  }
+
+  chunkPushNotificationReceiptIds(receiptIds: ExpoPushReceiptId[]): ExpoPushReceiptId[][] {
+    return this._chunkItems(receiptIds, PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT);
+  }
+
+  _chunkItems<T>(items: T[], chunkSize: number): T[][] {
     let chunks = [];
     let chunk = [];
-    for (let message of messages) {
-      chunk.push(message);
-      if (chunk.length >= PUSH_NOTIFICATION_CHUNK_LIMIT) {
+    for (let item of items) {
+      chunk.push(item);
+      if (chunk.length >= chunkSize) {
         chunks.push(chunk);
         chunk = [];
       }
@@ -260,6 +283,12 @@ export type ExpoPushMessage = {
   expiration?: number,
   priority?: 'default' | 'normal' | 'high',
   badge?: number,
+};
+
+export type ExpoPushReceiptId = string;
+
+export type ExpoPushTicket = {
+  id: ExpoPushReceiptId,
 };
 
 type ExpoPushSuccessReceipt = {
