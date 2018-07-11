@@ -124,8 +124,8 @@ export default class ExpoClient {
   }
 
   _chunkItems<T>(items: T[], chunkSize: number): T[][] {
-    let chunks = [];
-    let chunk = [];
+    let chunks: T[][] = [];
+    let chunk: T[] = [];
     for (let item of items) {
       chunk.push(item);
       if (chunk.length >= chunkSize) {
