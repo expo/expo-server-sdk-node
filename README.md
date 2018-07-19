@@ -51,6 +51,10 @@ let tickets = [];
       let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
       console.log(ticketChunk);
       tickets.push(...ticketChunk);
+      // NOTE: If a ticket contains an error code in ticket.details.error, you
+      // must handle it appropriately. The error codes are listed in the Expo
+      // documentation:
+      // https://docs.expo.io/versions/latest/guides/push-notifications#response-format 
     } catch (error) {
       console.error(error);
     }
@@ -74,7 +78,15 @@ let tickets = [];
 // notifications to devices that have blocked notifications or have uninstalled
 // your app. Expo does not control this policy and sends back the feedback from
 // Apple and Google so you can handle it appropriately.
-let receiptIds = tickets.map(ticket => ticket.id);
+let receiptIds = [];
+for (let ticket of tickets) {
+  // NOTE: Not all tickets have IDs; for example, tickets for notifications
+  // that could not be enqueued will have error information and no receipt ID.
+  if (ticket.id) {
+    receiptIds.push(ticket.id);
+  }
+}
+
 let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
 (async () => {
   // Like sending notifications, there are different strategies you could use
