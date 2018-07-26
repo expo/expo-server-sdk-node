@@ -32,7 +32,7 @@ const DEFAULT_CONCURRENT_REQUEST_LIMIT = 6;
 
 // TODO: Eventually we'll want to have developers authenticate. Right now it's not necessary because
 // push notifications are the only API we have and the push tokens are secret anyway.
-export default class ExpoClient {
+export class Expo {
   static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
   static pushNotificationReceiptChunkSizeLimit = PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT;
 
@@ -253,6 +253,8 @@ export default class ExpoClient {
     return error;
   }
 }
+
+export default Expo;
 
 function _gzipAsync(data: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
