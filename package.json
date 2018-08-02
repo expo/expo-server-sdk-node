@@ -53,13 +53,13 @@
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
     "@types/invariant": "^2.2.29",
-    "@types/node-fetch": "^2.1.1",
-    "node-fetch": "^2.1.2",
-    "promise-limit": "^2.6.0"
+    "@types/node-fetch": "^2.1.2",
+    "node-fetch": "^2.2.0",
+    "promise-limit": "^2.7.0"
   },
   "devDependencies": {
-    "jest": "^23.1.0",
-    "ts-jest": "^23.0.0",
-    "typescript": "^2.9.2"
+    "jest": "^23.4.2",
+    "ts-jest": "^23.1.0",
+    "typescript": "^3.0.1"
   }
 }

@@ -258,7 +258,7 @@ export default Expo;
 
 function _gzipAsync(data: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    zlib.gzip(data, (error: Error, result: Buffer) => {
+    zlib.gzip(data, (error, result) => {
       if (error) {
         reject(error);
       } else {

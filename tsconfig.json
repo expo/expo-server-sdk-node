@@ -6,13 +6,7 @@
     "sourceMap": true,
     "outDir": "./build",          
     "rootDir": "./src",                    
-    "strict": true, 
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitAny": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "esModuleInterop": true
+    "strict": true
   },
   "exclude": [
     "node_modules",
