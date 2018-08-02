@@ -4,11 +4,11 @@
  * Use this if you are running Node on your server backend when you are working with Expo
  * https://expo.io
  */
-import assert from 'assert';
+import * as assert from 'assert';
 import { Agent } from 'http';
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
-import promiseLimit from 'promise-limit';
-import zlib from 'zlib';
+import * as promiseLimit from 'promise-limit';
+import * as zlib from 'zlib';
 
 const BASE_URL = 'https://exp.host';
 const BASE_API_URL = `${BASE_URL}/--/api/v2`;
@@ -258,7 +258,7 @@ export default Expo;
 
 function _gzipAsync(data: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    zlib.gzip(data, (error, result) => {
+    zlib.gzip(data, (error: Error, result: Buffer) => {
       if (error) {
         reject(error);
       } else {
