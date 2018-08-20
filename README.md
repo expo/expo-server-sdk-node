@@ -1,4 +1,4 @@
-# expo-server-sdk-node [![CircleCI](https://circleci.com/gh/expo/exponent-server-sdk-node.svg?style=svg)](https://circleci.com/gh/expo/exponent-server-sdk-node) [![codecov](https://codecov.io/gh/expo/exponent-server-sdk-node/branch/master/graph/badge.svg)](https://codecov.io/gh/expo/exponent-server-sdk-node)
+# expo-server-sdk-node [![CircleCI](https://circleci.com/gh/expo/expo-server-sdk-node.svg?style=svg)](https://circleci.com/gh/expo/expo-server-sdk-node) [![codecov](https://codecov.io/gh/expo/expo-server-sdk-node/branch/master/graph/badge.svg)](https://codecov.io/gh/expo/expo-server-sdk-node)
 Server-side library for working with Expo using Node.js.
 
 If you have problems with the code in this repository, please file issues & bug reports at https://github.com/expo/expo. Thanks!
@@ -133,5 +133,5 @@ To build and watch for changes, `npm run watch`.
 
 ## See Also
 
-  * https://github.com/expo/exponent-server-sdk-ruby
-  * https://github.com/expo/exponent-server-sdk-python
+  * https://github.com/expo/expo-server-sdk-ruby
+  * https://github.com/expo/expo-server-sdk-python
