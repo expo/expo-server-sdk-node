@@ -5,6 +5,8 @@ If you have problems with the code in this repository, please file issues & bug 
 
 ## Usage
 
+_Note: the following code assumes that you are transpiling with Babel, if you aren't then you should use the old syntax for the SDK import: `const { Expo } = require('expo-server-sdk')`_
+
 ```bash
 yarn add expo-server-sdk
 ```
