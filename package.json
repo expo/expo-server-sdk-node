@@ -3,7 +3,7 @@
   "version": "3.0.1",
   "description": "Server side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
-  "types": "src/ExpoClient.ts",
+  "types": "build/ExpoClient.d.ts",
   "files": [
     "build",
     "src"
