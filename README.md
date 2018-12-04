@@ -5,6 +5,8 @@ If you have problems with the code in this repository, please file issues & bug 
 
 ## Usage
 
+_Note: the following code assumes that you are using JavaScript modules with `import`. If you aren't then you should use the old syntax for the SDK import: `const { Expo } = require('expo-server-sdk')`._
+
 ```bash
 yarn add expo-server-sdk
 ```
@@ -54,7 +56,7 @@ let tickets = [];
       // NOTE: If a ticket contains an error code in ticket.details.error, you
       // must handle it appropriately. The error codes are listed in the Expo
       // documentation:
-      // https://docs.expo.io/versions/latest/guides/push-notifications#response-format 
+      // https://docs.expo.io/versions/latest/guides/push-notifications#response-format
     } catch (error) {
       console.error(error);
     }
@@ -105,7 +107,7 @@ let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
           console.error(`There was an error sending a notification: ${receipt.message}`);
           if (receipt.details && receipt.details.error) {
             // The error codes are listed in the Expo documentation:
-            // https://docs.expo.io/versions/latest/guides/push-notifications#response-format 
+            // https://docs.expo.io/versions/latest/guides/push-notifications#response-format
             // You must handle the errors appropriately.
             console.error(`The error code is ${receipt.details.error}`);
           }
