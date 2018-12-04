@@ -5,6 +5,7 @@
     "module": "commonjs",
     "sourceMap": true,
     "declaration": true,
+    "types": ["jest", "node"],
     "outDir": "./build",
     "rootDir": "./src",
     "strict": true

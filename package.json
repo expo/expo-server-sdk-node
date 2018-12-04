@@ -17,6 +17,7 @@
     "watch": "tsc --watch"
   },
   "jest": {
+    "preset": "ts-jest",
     "roots": [
       "<rootDir>/src/"
     ],
@@ -24,12 +25,9 @@
       "ts",
       "js"
     ],
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    },
     "globals": {
       "ts-jest": {
-        "tsConfigFile": "tsconfig.json"
+        "tsConfig": "tsconfig.json"
       }
     },
     "testEnvironment": "node",
@@ -53,13 +51,14 @@
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
     "@types/invariant": "^2.2.29",
-    "@types/node-fetch": "^2.1.2",
-    "node-fetch": "^2.2.0",
+    "@types/node-fetch": "^2.1.4",
+    "node-fetch": "^2.3.0",
     "promise-limit": "^2.7.0"
   },
   "devDependencies": {
-    "jest": "^23.4.2",
-    "ts-jest": "^23.1.0",
-    "typescript": "^3.0.1"
+    "@types/jest": "^23.3.10",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5",
+    "typescript": "^3.2.1"
   }
 }
