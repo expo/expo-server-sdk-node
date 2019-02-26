@@ -302,7 +302,7 @@ type ExpoPushSuccessReceipt = {
 
 type ExpoPushErrorReceipt = {
   status: 'error',
-  message: 'string',
+  message: string,
   details?: {
     error?: 'DeviceNotRegistered' | 'InvalidCredentials' | 'MessageTooBig' | 'MessageRateExceeded',
   },
