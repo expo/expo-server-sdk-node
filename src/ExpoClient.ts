@@ -82,9 +82,9 @@ export class Expo {
 
     if (!Array.isArray(data) || data.length !== messages.length) {
       let apiError: ExtensibleError = new Error(
-        `Expected Expo to respond with ${messages.length} ${messages.length === 1
-          ? 'ticket'
-          : 'tickets'} but got ${data.length}`
+        `Expected Expo to respond with ${messages.length} ${
+          messages.length === 1 ? 'ticket' : 'tickets'
+        } but got ${data.length}`
       );
       apiError.data = data;
       throw apiError;
@@ -149,7 +149,7 @@ export class Expo {
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
-    })
+    });
 
     if (options.body != null) {
       let json = JSON.stringify(options.body);
@@ -164,12 +164,14 @@ export class Expo {
       requestHeaders.set('Content-Type', 'application/json');
     }
 
-    let response = await this._limitConcurrentRequests(() => fetch(url, {
-      method: options.httpMethod,
-      body: requestBody,
-      headers: requestHeaders,
-      agent: this._httpAgent,
-    }));
+    let response = await this._limitConcurrentRequests(() =>
+      fetch(url, {
+        method: options.httpMethod,
+        body: requestBody,
+        headers: requestHeaders,
+        agent: this._httpAgent,
+      })
+    );
 
     if (response.status !== 200) {
       let apiError = await this._parseErrorResponseAsync(response);
@@ -269,65 +271,73 @@ function _gzipAsync(data: Buffer): Promise<Buffer> {
 }
 
 export type ExpoClientOptions = {
-  httpAgent?: Agent,
-  maxConcurrentRequests?: number,
+  httpAgent?: Agent;
+  maxConcurrentRequests?: number;
 };
 
 export type ExpoPushToken = string;
 
 export type ExpoPushMessage = {
-  to: ExpoPushToken,
-  data?: Object,
-  title?: string,
-  body?: string,
-  sound?: 'default' | null,
-  ttl?: number,
-  expiration?: number,
-  priority?: 'default' | 'normal' | 'high',
-  badge?: number,
+  to: ExpoPushToken;
+  data?: Object;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+  sound?:
+    | 'default'
+    | null
+    | {
+        critical?: boolean;
+        name?: 'default' | null;
+        volume?: number;
+      };
+  ttl?: number;
+  expiration?: number;
+  priority?: 'default' | 'normal' | 'high';
+  badge?: number;
 };
 
 export type ExpoPushReceiptId = string;
 
 export type ExpoPushTicket = {
-  id: ExpoPushReceiptId,
+  id: ExpoPushReceiptId;
 };
 
 type ExpoPushSuccessReceipt = {
-  status: 'ok',
-  details?: Object,
+  status: 'ok';
+  details?: Object;
   // Internal field used only by developers working on Expo
-  __debug?: any,
+  __debug?: any;
 };
 
 type ExpoPushErrorReceipt = {
-  status: 'error',
-  message: string,
+  status: 'error';
+  message: string;
   details?: {
-    error?: 'DeviceNotRegistered' | 'InvalidCredentials' | 'MessageTooBig' | 'MessageRateExceeded',
-  },
+    error?: 'DeviceNotRegistered' | 'InvalidCredentials' | 'MessageTooBig' | 'MessageRateExceeded';
+  };
   // Internal field used only by developers working on Expo
-  __debug?: any,
+  __debug?: any;
 };
 
 export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
 type RequestOptions = {
-  httpMethod: 'get' | 'post',
-  body?: any,
-  shouldCompress: (body: string) => boolean,
+  httpMethod: 'get' | 'post';
+  body?: any;
+  shouldCompress: (body: string) => boolean;
 };
 
 type ApiResult = {
-  errors?: ApiResultError[],
-  data?: any,
+  errors?: ApiResultError[];
+  data?: any;
 };
 
 type ApiResultError = {
-  message: string,
-  code: string,
-  details?: any,
-  stack?: string,
+  message: string;
+  code: string;
+  details?: any;
+  stack?: string;
 };
 
 class ExtensibleError extends Error {
