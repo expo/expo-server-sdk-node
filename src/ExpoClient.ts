@@ -299,7 +299,8 @@ export type ExpoPushMessage = {
 
 export type ExpoPushReceiptId = string;
 
-export type ExpoPushTicket = {
+type ExpoPushSuccessTicket = {
+  status: 'ok';
   id: ExpoPushReceiptId;
 };
 
@@ -319,6 +320,10 @@ type ExpoPushErrorReceipt = {
   // Internal field used only by developers working on Expo
   __debug?: any;
 };
+
+type ExpoPushErrorTicket = ExpoPushErrorReceipt;
+
+export type ExpoPushTicket = ExpoPushSuccessTicket | ExpoPushErrorTicket;
 
 export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
