@@ -295,6 +295,7 @@ export type ExpoPushMessage = {
   expiration?: number;
   priority?: 'default' | 'normal' | 'high';
   badge?: number;
+  channelId?: string;
 };
 
 export type ExpoPushReceiptId = string;
