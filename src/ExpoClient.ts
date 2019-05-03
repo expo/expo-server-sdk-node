@@ -299,9 +299,14 @@ export type ExpoPushMessage = {
 
 export type ExpoPushReceiptId = string;
 
-export type ExpoPushTicket = {
+type ExpoPushSuccessTicket = {
+  status: 'ok';
   id: ExpoPushReceiptId;
 };
+
+type ExpoPushErrorTicket = ExpoPushErrorReceipt;
+
+export type ExpoPushTicket = ExpoPushSuccessTicket | ExpoPushErrorTicket;
 
 type ExpoPushSuccessReceipt = {
   status: 'ok';
