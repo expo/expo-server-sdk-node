@@ -12,7 +12,7 @@ yarn add expo-server-sdk
 ```
 
 ```js
-import Expo from 'expo-server-sdk';
+import { Expo } from 'expo-server-sdk';
 
 // Create a new Expo SDK client
 let expo = new Expo();
