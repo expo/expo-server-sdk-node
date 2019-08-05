@@ -72,6 +72,8 @@ export class Expo {
    * sized chunks.
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
+    const actualMessagesCount = Expo._getActualMessagesCount(messages);
+
     let data = await this._requestAsync(`${BASE_API_URL}/push/send`, {
       httpMethod: 'post',
       body: messages,
@@ -80,10 +82,10 @@ export class Expo {
       },
     });
 
-    if (!Array.isArray(data) || data.length !== messages.length) {
+    if (!Array.isArray(data) || data.length !== actualMessagesCount) {
       let apiError: ExtensibleError = new Error(
-        `Expected Expo to respond with ${messages.length} ${
-          messages.length === 1 ? 'ticket' : 'tickets'
+        `Expected Expo to respond with ${actualMessagesCount} ${
+          actualMessagesCount === 1 ? 'ticket' : 'tickets'
         } but got ${data.length}`
       );
       apiError.data = data;
@@ -116,7 +118,49 @@ export class Expo {
   }
 
   chunkPushNotifications(messages: ExpoPushMessage[]): ExpoPushMessage[][] {
-    return this._chunkItems(messages, PUSH_NOTIFICATION_CHUNK_LIMIT);
+    let chunks: ExpoPushMessage[][] = [];
+    let chunk: ExpoPushMessage[] = [];
+
+    let chunkMessagesCount = 0;
+    for (let message of messages) {
+      if (Array.isArray(message.to)) {
+        let partialTo: ExpoPushToken[] = [];
+        for (let recipient of message.to) {
+          partialTo.push(recipient);
+          chunkMessagesCount++;
+          if (chunkMessagesCount >= PUSH_NOTIFICATION_CHUNK_LIMIT) {
+            // Cap this chunk here if it already exceeds PUSH_NOTIFICATION_CHUNK_LIMIT.
+            // Then create a new chunk to continue on the remaining recipients for this message.
+            chunk.push({ ...message, to: partialTo });
+            chunks.push(chunk);
+            chunk = [];
+            chunkMessagesCount = 0;
+            partialTo = [];
+          }
+        }
+        if (partialTo.length) {
+          // Add remaining `partialTo` to the chunk.
+          chunk.push({ ...message, to: partialTo });
+        }
+      } else {
+        chunk.push(message);
+        chunkMessagesCount++;
+      }
+
+      if (chunkMessagesCount >= PUSH_NOTIFICATION_CHUNK_LIMIT) {
+        // Cap this chunk if it exceeds PUSH_NOTIFICATION_CHUNK_LIMIT.
+        // Then create a new chunk to continue on the remaining messages.
+        chunks.push(chunk);
+        chunk = [];
+        chunkMessagesCount = 0;
+      }
+    }
+    if (chunkMessagesCount) {
+      // Add the remaining chunk to the chunks.
+      chunks.push(chunk);
+    }
+
+    return chunks;
   }
 
   chunkPushNotificationReceiptIds(receiptIds: ExpoPushReceiptId[]): ExpoPushReceiptId[][] {
@@ -254,6 +298,17 @@ export class Expo {
 
     return error;
   }
+
+  static _getActualMessagesCount(messages: ExpoPushMessage[]): number {
+    return messages.reduce((acc, cur) => {
+      if (Array.isArray(cur.to)) {
+        acc += cur.to.length;
+      } else {
+        acc++;
+      }
+      return acc;
+    }, 0);
+  }
 }
 
 export default Expo;
@@ -278,7 +333,7 @@ export type ExpoClientOptions = {
 export type ExpoPushToken = string;
 
 export type ExpoPushMessage = {
-  to: ExpoPushToken;
+  to: ExpoPushToken | ExpoPushToken[];
   data?: Object;
   title?: string;
   subtitle?: string;
