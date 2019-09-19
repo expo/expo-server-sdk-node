@@ -351,6 +351,7 @@ export type ExpoPushMessage = {
   priority?: 'default' | 'normal' | 'high';
   badge?: number;
   channelId?: string;
+  'apns-push-type'?: 'alert' | 'background';
 };
 
 export type ExpoPushReceiptId = string;
