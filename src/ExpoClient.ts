@@ -351,6 +351,8 @@ export type ExpoPushMessage = {
   priority?: 'default' | 'normal' | 'high';
   badge?: number;
   channelId?: string;
+  _category?: string;
+  _displayInForeground?: boolean;
 };
 
 export type ExpoPushReceiptId = string;
