@@ -10,7 +10,7 @@ function _coundAndValidateMessages(chunks: ExpoPushMessage[][]) {
   return totalMessageCount;
 }
 
-it('chunks lists of push notification messages', () => {
+test('chunks lists of push notification messages', () => {
   let client = new ExpoClient();
   let messages = new Array(999).fill({ to: '?' });
   let chunks = client.chunkPushNotifications(messages);
@@ -21,7 +21,7 @@ it('chunks lists of push notification messages', () => {
   expect(totalMessageCount).toBe(messages.length);
 });
 
-it('can chunk small lists of push notification messages', () => {
+test('can chunk small lists of push notification messages', () => {
   let client = new ExpoClient();
   let messages = new Array(10).fill({ to: '?' });
   let chunks = client.chunkPushNotifications(messages);
@@ -29,7 +29,7 @@ it('can chunk small lists of push notification messages', () => {
   expect(chunks[0].length).toBe(10);
 });
 
-it('chunks single push notification message with lists of recipients', () => {
+test('chunks single push notification message with lists of recipients', () => {
   const messagesLength = 999;
 
   let client = new ExpoClient();
@@ -43,7 +43,7 @@ it('chunks single push notification message with lists of recipients', () => {
   expect(totalMessageCount).toBe(messagesLength);
 });
 
-it('can chunk single push notification message with small lists of recipients', () => {
+test('can chunk single push notification message with small lists of recipients', () => {
   const messagesLength = 10;
 
   let client = new ExpoClient();
@@ -54,7 +54,7 @@ it('can chunk single push notification message with small lists of recipients', 
   expect(chunks[0][0].to.length).toBe(messagesLength);
 });
 
-it('chunks push notification messages mixed with lists of recipients and single recipient', () => {
+test('chunks push notification messages mixed with lists of recipients and single recipient', () => {
   let client = new ExpoClient();
   let messages = [
     { to: new Array(888).fill('?') },
@@ -69,10 +69,10 @@ it('chunks push notification messages mixed with lists of recipients and single 
   expect(totalMessageCount).toBe(888 + 999 + 90 + 10);
 });
 
-describe('chunks single push notification message with multiple recipients edge cases', () => {
+describe('chunking a single push notification message with multiple recipients', () => {
   let client = new ExpoClient();
 
-  it('one message with 100 recipients', () => {
+  test('one message with 100 recipients', () => {
     let messages = [{ to: new Array(100).fill('?') }];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(1);
@@ -80,7 +80,7 @@ describe('chunks single push notification message with multiple recipients edge 
     expect(chunks[0][0].to.length).toBe(100);
   });
 
-  it('one message with 101 recipients', () => {
+  test('one message with 101 recipients', () => {
     let messages = [{ to: new Array(101).fill('?') }];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(2);
@@ -90,7 +90,7 @@ describe('chunks single push notification message with multiple recipients edge 
     expect(totalMessageCount).toBe(101);
   });
 
-  it('one message with 99 recipients and two additional messages', () => {
+  test('one message with 99 recipients and two additional messages', () => {
     let messages = [{ to: new Array(99).fill('?') }, ...new Array(2).fill({ to: '?' })];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(2);
@@ -100,7 +100,7 @@ describe('chunks single push notification message with multiple recipients edge 
     expect(totalMessageCount).toBe(99 + 2);
   });
 
-  it('one message with 100 recipients and two additional messages', () => {
+  test('one message with 100 recipients and two additional messages', () => {
     let messages = [{ to: new Array(100).fill('?') }, ...new Array(2).fill({ to: '?' })];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(2);
@@ -110,7 +110,7 @@ describe('chunks single push notification message with multiple recipients edge 
     expect(totalMessageCount).toBe(100 + 2);
   });
 
-  it('99 messages and one additional message with with two recipients', () => {
+  test('99 messages and one additional message with with two recipients', () => {
     let messages = [...new Array(99).fill({ to: '?' }), { to: new Array(2).fill('?') }];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(2);
@@ -120,19 +120,19 @@ describe('chunks single push notification message with multiple recipients edge 
     expect(totalMessageCount).toBe(99 + 2);
   });
 
-  it('no message', () => {
+  test('no message', () => {
     let messages: ExpoPushMessage[] = [];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(0);
   });
 
-  it('one message with no recipient', () => {
+  test('one message with no recipient', () => {
     let messages = [{ to: [] }];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(0);
   });
 
-  it('two message and one additional message with no recipient', () => {
+  test('two message and one additional message with no recipient', () => {
     let messages = [...new Array(2).fill({ to: '?' }), { to: [] }];
     let chunks = client.chunkPushNotifications(messages);
     expect(chunks.length).toBe(1);
@@ -143,11 +143,11 @@ describe('chunks single push notification message with multiple recipients edge 
   });
 });
 
-it('defines the push notification chunk size', () => {
+test('defines the push notification chunk size', () => {
   expect(ExpoClient.pushNotificationChunkSizeLimit).toBeDefined();
 });
 
-it('chunks lists of push notification receipt IDs', () => {
+test('chunks lists of push notification receipt IDs', () => {
   let client = new ExpoClient();
   let receiptIds = new Array(2999).fill('F5741A13-BCDA-434B-A316-5DC0E6FFA94F');
   let chunks = client.chunkPushNotificationReceiptIds(receiptIds);
@@ -158,11 +158,11 @@ it('chunks lists of push notification receipt IDs', () => {
   expect(totalReceiptIdCount).toBe(receiptIds.length);
 });
 
-it('defines the push notification receipt ID chunk size', () => {
+test('defines the push notification receipt ID chunk size', () => {
   expect(ExpoClient.pushNotificationReceiptChunkSizeLimit).toBeDefined();
 });
 
-it('can detect an Expo push token', () => {
+test('can detect an Expo push token', () => {
   expect(ExpoClient.isExpoPushToken('ExpoPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
   expect(ExpoClient.isExpoPushToken('ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
 
