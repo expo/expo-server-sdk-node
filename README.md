@@ -28,7 +28,7 @@ for (let pushToken of somePushTokens) {
     continue;
   }
 
-  // Construct a message (see https://docs.expo.io/versions/latest/guides/push-notifications.html)
+  // Construct a message (see https://docs.expo.io/versions/latest/guides/push-notifications)
   messages.push({
     to: pushToken,
     sound: 'default',
