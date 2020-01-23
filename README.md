@@ -17,7 +17,7 @@ import { Expo } from 'expo-server-sdk';
 // Create a new Expo SDK client
 let expo = new Expo();
 
-// Create the messages that you want to send to clents
+// Create the messages that you want to send to clients
 let messages = [];
 for (let pushToken of somePushTokens) {
   // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
@@ -66,7 +66,7 @@ let tickets = [];
 ...
 
 // Later, after the Expo push notification service has delivered the
-// notifications to Apple or Google (usually quickly, but allow the the service
+// notifications to Apple or Google (usually quickly, but allow the service
 // up to 30 minutes when under load), a "receipt" for each notification is
 // created. The receipts will be available for at least a day; stale receipts
 // are deleted.
