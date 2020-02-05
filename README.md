@@ -100,7 +100,7 @@ let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
 
       // The receipts specify whether Apple or Google successfully received the
       // notification and information about an error, if one occurred.
-      for (let receipt of receipts) {
+      for (let receipt of Object.entries(receipts)) {
         if (receipt.status === 'ok') {
           continue;
         } else if (receipt.status === 'error') {
