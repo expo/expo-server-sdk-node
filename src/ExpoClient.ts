@@ -36,12 +36,12 @@ export class Expo {
   static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
   static pushNotificationReceiptChunkSizeLimit = PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT;
 
-  _httpAgent: Agent | undefined;
-  _limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
+  private httpAgent: Agent | undefined;
+  private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
 
   constructor(options: ExpoClientOptions = {}) {
-    this._httpAgent = options.httpAgent;
-    this._limitConcurrentRequests = promiseLimit(
+    this.httpAgent = options.httpAgent;
+    this.limitConcurrentRequests = promiseLimit(
       options.maxConcurrentRequests != null
         ? options.maxConcurrentRequests
         : DEFAULT_CONCURRENT_REQUEST_LIMIT
@@ -72,9 +72,9 @@ export class Expo {
    * sized chunks.
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
-    const actualMessagesCount = Expo._getActualMessagesCount(messages);
+    const actualMessagesCount = Expo._getActualMessageCount(messages);
 
-    let data = await this._requestAsync(`${BASE_API_URL}/push/send`, {
+    let data = await this.requestAsync(`${BASE_API_URL}/push/send`, {
       httpMethod: 'post',
       body: messages,
       shouldCompress(body) {
@@ -98,7 +98,7 @@ export class Expo {
   async getPushNotificationReceiptsAsync(
     receiptIds: ExpoPushReceiptId[]
   ): Promise<{ [id: string]: ExpoPushReceipt }> {
-    let data = await this._requestAsync(`${BASE_API_URL}/push/getReceipts`, {
+    let data = await this.requestAsync(`${BASE_API_URL}/push/getReceipts`, {
       httpMethod: 'post',
       body: { ids: receiptIds },
       shouldCompress(body) {
@@ -164,10 +164,10 @@ export class Expo {
   }
 
   chunkPushNotificationReceiptIds(receiptIds: ExpoPushReceiptId[]): ExpoPushReceiptId[][] {
-    return this._chunkItems(receiptIds, PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT);
+    return this.chunkItems(receiptIds, PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT);
   }
 
-  _chunkItems<T>(items: T[], chunkSize: number): T[][] {
+  private chunkItems<T>(items: T[], chunkSize: number): T[][] {
     let chunks: T[][] = [];
     let chunk: T[] = [];
     for (let item of items) {
@@ -185,7 +185,7 @@ export class Expo {
     return chunks;
   }
 
-  async _requestAsync(url: string, options: RequestOptions): Promise<any> {
+  private async requestAsync(url: string, options: RequestOptions): Promise<any> {
     let requestBody: string | Buffer | undefined;
 
     let sdkVersion = require('../package.json').version;
@@ -199,7 +199,7 @@ export class Expo {
       let json = JSON.stringify(options.body);
       assert(json != null, `JSON request body must not be null`);
       if (options.shouldCompress(json)) {
-        requestBody = await _gzipAsync(Buffer.from(json));
+        requestBody = await gzipAsync(Buffer.from(json));
         requestHeaders.set('Content-Encoding', 'gzip');
       } else {
         requestBody = json;
@@ -208,17 +208,17 @@ export class Expo {
       requestHeaders.set('Content-Type', 'application/json');
     }
 
-    let response = await this._limitConcurrentRequests(() =>
+    let response = await this.limitConcurrentRequests(() =>
       fetch(url, {
         method: options.httpMethod,
         body: requestBody,
         headers: requestHeaders,
-        agent: this._httpAgent,
+        agent: this.httpAgent,
       })
     );
 
     if (response.status !== 200) {
-      let apiError = await this._parseErrorResponseAsync(response);
+      let apiError = await this.parseErrorResponseAsync(response);
       throw apiError;
     }
 
@@ -228,37 +228,37 @@ export class Expo {
     try {
       result = JSON.parse(textBody);
     } catch (e) {
-      let apiError = await this._getTextResponseErrorAsync(response, textBody);
+      let apiError = await this.getTextResponseErrorAsync(response, textBody);
       throw apiError;
     }
 
     if (result.errors) {
-      let apiError = this._getErrorFromResult(result);
+      let apiError = this.getErrorFromResult(result);
       throw apiError;
     }
 
     return result.data;
   }
 
-  async _parseErrorResponseAsync(response: FetchResponse): Promise<Error> {
+  private async parseErrorResponseAsync(response: FetchResponse): Promise<Error> {
     let textBody = await response.text();
     let result: ApiResult;
     try {
       result = JSON.parse(textBody);
     } catch (e) {
-      return await this._getTextResponseErrorAsync(response, textBody);
+      return await this.getTextResponseErrorAsync(response, textBody);
     }
 
     if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
-      let apiError: ExtensibleError = await this._getTextResponseErrorAsync(response, textBody);
+      let apiError: ExtensibleError = await this.getTextResponseErrorAsync(response, textBody);
       apiError.errorData = result;
       return apiError;
     }
 
-    return this._getErrorFromResult(result);
+    return this.getErrorFromResult(result);
   }
 
-  async _getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
+  private async getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
     let apiError: ExtensibleError = new Error(
       `Expo responded with an error with status code ${response.status}: ` + text
     );
@@ -271,12 +271,12 @@ export class Expo {
    * Returns an error for the first API error in the result, with an optional `others` field that
    * contains any other errors.
    */
-  _getErrorFromResult(result: ApiResult): Error {
+  private getErrorFromResult(result: ApiResult): Error {
     assert(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
     let [errorData, ...otherErrorData] = result.errors!;
-    let error: ExtensibleError = this._getErrorFromResultError(errorData);
+    let error: ExtensibleError = this.getErrorFromResultError(errorData);
     if (otherErrorData.length) {
-      error.others = otherErrorData.map(data => this._getErrorFromResultError(data));
+      error.others = otherErrorData.map(data => this.getErrorFromResultError(data));
     }
     return error;
   }
@@ -284,7 +284,7 @@ export class Expo {
   /**
    * Returns an error for a single API error
    */
-  _getErrorFromResultError(errorData: ApiResultError): Error {
+  private getErrorFromResultError(errorData: ApiResultError): Error {
     let error: ExtensibleError = new Error(errorData.message);
     error.code = errorData.code;
 
@@ -299,21 +299,21 @@ export class Expo {
     return error;
   }
 
-  static _getActualMessagesCount(messages: ExpoPushMessage[]): number {
-    return messages.reduce((acc, cur) => {
-      if (Array.isArray(cur.to)) {
-        acc += cur.to.length;
+  static _getActualMessageCount(messages: ExpoPushMessage[]): number {
+    return messages.reduce((total, message) => {
+      if (Array.isArray(message.to)) {
+        total += message.to.length;
       } else {
-        acc++;
+        total++;
       }
-      return acc;
+      return total;
     }, 0);
   }
 }
 
 export default Expo;
 
-function _gzipAsync(data: Buffer): Promise<Buffer> {
+function gzipAsync(data: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     zlib.gzip(data, (error, result) => {
       if (error) {

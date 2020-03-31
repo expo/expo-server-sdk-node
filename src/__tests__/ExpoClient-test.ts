@@ -1,15 +1,5 @@
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 
-function _coundAndValidateMessages(chunks: ExpoPushMessage[][]) {
-  let totalMessageCount = 0;
-  for (let chunk of chunks) {
-    let chunkMessagesCount = ExpoClient._getActualMessagesCount(chunk);
-    expect(chunkMessagesCount).toBeLessThanOrEqual(ExpoClient.pushNotificationChunkSizeLimit);
-    totalMessageCount += chunkMessagesCount;
-  }
-  return totalMessageCount;
-}
-
 test('chunks lists of push notification messages', () => {
   let client = new ExpoClient();
   let messages = new Array(999).fill({ to: '?' });
@@ -39,7 +29,7 @@ test('chunks single push notification message with lists of recipients', () => {
     // Each chunk should only contain a single message with 100 recipients
     expect(chunk.length).toBe(1);
   }
-  let totalMessageCount = _coundAndValidateMessages(chunks);
+  let totalMessageCount = countAndValidateMessages(chunks);
   expect(totalMessageCount).toBe(messagesLength);
 });
 
@@ -65,7 +55,7 @@ test('chunks push notification messages mixed with lists of recipients and singl
     ...new Array(10).fill({ to: '?' }),
   ];
   let chunks = client.chunkPushNotifications(messages);
-  let totalMessageCount = _coundAndValidateMessages(chunks);
+  let totalMessageCount = countAndValidateMessages(chunks);
   expect(totalMessageCount).toBe(888 + 999 + 90 + 10);
 });
 
@@ -86,7 +76,7 @@ describe('chunking a single push notification message with multiple recipients',
     expect(chunks.length).toBe(2);
     expect(chunks[0].length).toBe(1);
     expect(chunks[1].length).toBe(1);
-    let totalMessageCount = _coundAndValidateMessages(chunks);
+    let totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(101);
   });
 
@@ -96,7 +86,7 @@ describe('chunking a single push notification message with multiple recipients',
     expect(chunks.length).toBe(2);
     expect(chunks[0].length).toBe(2);
     expect(chunks[1].length).toBe(1);
-    let totalMessageCount = _coundAndValidateMessages(chunks);
+    let totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(99 + 2);
   });
 
@@ -106,7 +96,7 @@ describe('chunking a single push notification message with multiple recipients',
     expect(chunks.length).toBe(2);
     expect(chunks[0].length).toBe(1);
     expect(chunks[1].length).toBe(2);
-    let totalMessageCount = _coundAndValidateMessages(chunks);
+    let totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(100 + 2);
   });
 
@@ -116,7 +106,7 @@ describe('chunking a single push notification message with multiple recipients',
     expect(chunks.length).toBe(2);
     expect(chunks[0].length).toBe(100);
     expect(chunks[1].length).toBe(1);
-    let totalMessageCount = _coundAndValidateMessages(chunks);
+    let totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(99 + 2);
   });
 
@@ -138,7 +128,7 @@ describe('chunking a single push notification message with multiple recipients',
     expect(chunks.length).toBe(1);
     // The message with no recipient should be removed.
     expect(chunks[0].length).toBe(2);
-    let totalMessageCount = _coundAndValidateMessages(chunks);
+    let totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(2);
   });
 });
@@ -179,3 +169,13 @@ test('can detect an Expo push token', () => {
     ExpoClient.isExpoPushToken('5fa729c6e535eb568g18fdabd35785fc60f41c161d9d7cf4b0bbb0d92437fda0')
   ).toBe(false);
 });
+
+function countAndValidateMessages(chunks: ExpoPushMessage[][]) {
+  let totalMessageCount = 0;
+  for (let chunk of chunks) {
+    let chunkMessagesCount = ExpoClient._getActualMessageCount(chunk);
+    expect(chunkMessagesCount).toBeLessThanOrEqual(ExpoClient.pushNotificationChunkSizeLimit);
+    totalMessageCount += chunkMessagesCount;
+  }
+  return totalMessageCount;
+}
