@@ -9,9 +9,8 @@
     "src"
   ],
   "scripts": {
-    "babel": "babel",
     "build": "./build.sh",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "test": "jest",
     "tsc": "tsc",
     "watch": "tsc --watch"
