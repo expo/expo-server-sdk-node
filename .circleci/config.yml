@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/expo-server-sdk
     docker:
-      - image: circleci/node:10
+      - image: circleci/node:12
     steps:
       - checkout
       - run:
