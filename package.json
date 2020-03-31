@@ -50,15 +50,15 @@
   },
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.0",
     "promise-limit": "^2.7.0"
   },
   "devDependencies": {
-    "@types/invariant": "^2.2.29",
-    "@types/jest": "^23.3.10",
-    "@types/node-fetch": "^2.1.4",
-    "jest": "^23.6.0",
-    "ts-jest": "^23.10.5",
-    "typescript": "^3.2.1"
+    "@types/invariant": "^2.2.31",
+    "@types/jest": "^25.1.4",
+    "@types/node-fetch": "^2.5.5",
+    "jest": "^25.2.4",
+    "ts-jest": "~25.3.0",
+    "typescript": "^3.8.3"
   }
 }
