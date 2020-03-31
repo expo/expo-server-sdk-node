@@ -355,23 +355,23 @@ export type ExpoPushMessage = {
 
 export type ExpoPushReceiptId = string;
 
-type ExpoPushSuccessTicket = {
+export type ExpoPushSuccessTicket = {
   status: 'ok';
   id: ExpoPushReceiptId;
 };
 
-type ExpoPushErrorTicket = ExpoPushErrorReceipt;
+export type ExpoPushErrorTicket = ExpoPushErrorReceipt;
 
 export type ExpoPushTicket = ExpoPushSuccessTicket | ExpoPushErrorTicket;
 
-type ExpoPushSuccessReceipt = {
+export type ExpoPushSuccessReceipt = {
   status: 'ok';
   details?: Object;
   // Internal field used only by developers working on Expo
   __debug?: any;
 };
 
-type ExpoPushErrorReceipt = {
+export type ExpoPushErrorReceipt = {
   status: 'error';
   message: string;
   details?: {
