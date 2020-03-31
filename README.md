@@ -17,7 +17,7 @@ import { Expo } from 'expo-server-sdk';
 // Create a new Expo SDK client
 let expo = new Expo();
 
-// Create the messages that you want to send to clients
+// Create the messages that you want to send to clents
 let messages = [];
 for (let pushToken of somePushTokens) {
   // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
@@ -66,7 +66,7 @@ let tickets = [];
 ...
 
 // Later, after the Expo push notification service has delivered the
-// notifications to Apple or Google (usually quickly, but allow the service
+// notifications to Apple or Google (usually quickly, but allow the the service
 // up to 30 minutes when under load), a "receipt" for each notification is
 // created. The receipts will be available for at least a day; stale receipts
 // are deleted.
@@ -100,16 +100,19 @@ let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
 
       // The receipts specify whether Apple or Google successfully received the
       // notification and information about an error, if one occurred.
-      for (let receipt of receipts) {
-        if (receipt.status === 'ok') {
+      for (let receiptId in receipts) {
+        let { status, message, details } = receipts[receiptId];
+        if (status === 'ok') {
           continue;
-        } else if (receipt.status === 'error') {
-          console.error(`There was an error sending a notification: ${receipt.message}`);
-          if (receipt.details && receipt.details.error) {
+        } else if (status === 'error') {
+          console.error(
+            `There was an error sending a notification: ${message}`
+          );
+          if (details && details.error) {
             // The error codes are listed in the Expo documentation:
-            // https://docs.expo.io/versions/latest/guides/push-notifications#response-format
+            // https://docs.expo.io/versions/latest/guides/push-notifications/#individual-errors
             // You must handle the errors appropriately.
-            console.error(`The error code is ${receipt.details.error}`);
+            console.error(`The error code is ${details.error}`);
           }
         }
       }
