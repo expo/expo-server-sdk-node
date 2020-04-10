@@ -17,7 +17,7 @@ import { Expo } from 'expo-server-sdk';
 // Create a new Expo SDK client
 let expo = new Expo();
 
-// Create the messages that you want to send to clents
+// Create the messages that you want to send to clients
 let messages = [];
 for (let pushToken of somePushTokens) {
   // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
