@@ -132,10 +132,6 @@ To build, `npm run build`.
 
 To build and watch for changes, `npm run watch`.
 
-## TODO
-
-  * Need to add tests
-
 ## See Also
 
   * https://github.com/expo-community/expo-server-sdk-ruby

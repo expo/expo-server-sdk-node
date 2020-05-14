@@ -6,6 +6,21 @@ afterEach(() => {
   (fetch as any).reset();
 });
 
+test('limits the number of concurrent requests', async () => {
+  (fetch as any).mock('https://exp.host/--/api/v2/push/send', { data: [] });
+  expect((fetch as any).calls().length).toBe(0);
+
+  const client = new ExpoClient({ maxConcurrentRequests: 1 });
+  const sendPromise1 = client.sendPushNotificationsAsync([]);
+  const sendPromise2 = client.sendPushNotificationsAsync([]);
+
+  expect((fetch as any).calls().length).toBe(1);
+  await sendPromise1;
+  expect((fetch as any).calls().length).toBe(2);
+  await sendPromise2;
+  expect((fetch as any).calls().length).toBe(2);
+});
+
 describe('sending push notification messages', () => {
   test('sends requests to the Expo API server', async () => {
     const mockTickets = [
