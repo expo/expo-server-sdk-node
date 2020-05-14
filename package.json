@@ -25,6 +25,7 @@
     }
   },
   "jest": {
+    "coverageDirectory": "<rootDir>/../coverage",
     "preset": "ts-jest",
     "rootDir": "src",
     "testEnvironment": "node"
@@ -52,6 +53,7 @@
     "@types/node-fetch": "^2.5.7",
     "eslint": "^7.0.0",
     "eslint-config-universe": "^3.0.0",
+    "fetch-mock": "^9.9.0",
     "jest": "^25.2.4",
     "prettier": "^2.0.5",
     "ts-jest": "~25.5.1",
