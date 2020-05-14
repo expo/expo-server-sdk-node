@@ -53,7 +53,6 @@
     "promise-limit": "^2.7.0"
   },
   "devDependencies": {
-    "@types/invariant": "^2.2.31",
     "@types/jest": "^25.1.4",
     "@types/node-fetch": "^2.5.5",
     "jest": "^25.2.4",
