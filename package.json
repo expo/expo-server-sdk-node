@@ -1,7 +1,7 @@
 {
   "name": "expo-server-sdk",
   "version": "3.5.0",
-  "description": "Server side library for working with Expo using Node.js",
+  "description": "Server-side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
   "types": "build/ExpoClient.d.ts",
   "files": [
@@ -17,22 +17,8 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "roots": [
-      "<rootDir>/src/"
-    ],
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.json"
-      }
-    },
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/__tests__/*.+(js|ts)"
-    ]
+    "rootDir": "src",
+    "testEnvironment": "node"
   },
   "repository": {
     "type": "git",
@@ -53,10 +39,10 @@
     "promise-limit": "^2.7.0"
   },
   "devDependencies": {
-    "@types/jest": "^25.1.4",
-    "@types/node-fetch": "^2.5.5",
+    "@types/jest": "^25.2.2",
+    "@types/node-fetch": "^2.5.7",
     "jest": "^25.2.4",
-    "ts-jest": "~25.3.0",
-    "typescript": "^3.8.3"
+    "ts-jest": "~25.5.1",
+    "typescript": "^3.9.2"
   }
 }
