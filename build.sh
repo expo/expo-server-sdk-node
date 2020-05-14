@@ -6,7 +6,7 @@ rm -fr build
 
 echo
 echo "📚  Compiling source files"
-npm run tsc
+yarn tsc
 
 echo
 echo "🆗  Build finished"

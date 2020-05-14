@@ -11,7 +11,7 @@
   "scripts": {
     "build": "./build.sh",
     "lint": "eslint src",
-    "prepare": "npm run build",
+    "prepare": "yarn build",
     "test": "jest",
     "tsc": "tsc",
     "watch": "tsc --watch"
