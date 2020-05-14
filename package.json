@@ -10,10 +10,19 @@
   ],
   "scripts": {
     "build": "./build.sh",
+    "lint": "eslint src",
     "prepare": "npm run build",
     "test": "jest",
     "tsc": "tsc",
     "watch": "tsc --watch"
+  },
+  "eslintConfig": {
+    "extends": "universe/node",
+    "settings": {
+      "react": {
+        "version": "999.999.0"
+      }
+    }
   },
   "jest": {
     "preset": "ts-jest",
@@ -41,7 +50,10 @@
   "devDependencies": {
     "@types/jest": "^25.2.2",
     "@types/node-fetch": "^2.5.7",
+    "eslint": "^7.0.0",
+    "eslint-config-universe": "^3.0.0",
     "jest": "^25.2.4",
+    "prettier": "^2.0.5",
     "ts-jest": "~25.5.1",
     "typescript": "^3.9.2"
   }

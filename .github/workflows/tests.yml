@@ -17,7 +17,7 @@ jobs:
         path: ${{ github.workspace }}/node_modules
         key: ${{ runner.OS }}-${{ matrix.node-version}}-node_modules-${{ hashFiles('yarn.lock') }}
     - run: yarn --frozen-lockfile
-    # - run: yarn lint --max-warnings=0
+    - run: yarn lint --max-warnings=0
     - run: yarn test --coverage
     - name: Create coverage report flag
       id: codecov-flag
