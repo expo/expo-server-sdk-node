@@ -138,5 +138,5 @@ To build and watch for changes, `npm run watch`.
 
 ## See Also
 
-  * https://github.com/expo/expo-server-sdk-ruby
-  * https://github.com/expo/expo-server-sdk-python
+  * https://github.com/expo-community/expo-server-sdk-ruby
+  * https://github.com/expo-community/expo-server-sdk-python
