@@ -51,7 +51,7 @@ export class Expo {
   /**
    * Returns `true` if the token is an Expo push token
    */
-  static isExpoPushToken(token: ExpoPushToken): boolean {
+  static isExpoPushToken(token: unknown): token is ExpoPushToken {
     return (
       typeof token === 'string' &&
       (((token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[')) &&
