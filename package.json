@@ -49,14 +49,14 @@
     "promise-limit": "^2.7.0"
   },
   "devDependencies": {
-    "@types/jest": "^25.2.2",
+    "@types/jest": "^26.0.3",
     "@types/node-fetch": "^2.5.7",
-    "eslint": "^7.0.0",
-    "eslint-config-universe": "^3.0.0",
-    "fetch-mock": "^9.9.0",
-    "jest": "^25.2.4",
+    "eslint": "^7.3.1",
+    "eslint-config-universe": "^3.0.2",
+    "fetch-mock": "^9.10.3",
+    "jest": "^26.1.0",
     "prettier": "^2.0.5",
-    "ts-jest": "~25.5.1",
-    "typescript": "^3.9.2"
+    "ts-jest": "~26.1.1",
+    "typescript": "^3.9.5"
   }
 }
