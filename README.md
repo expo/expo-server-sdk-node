@@ -28,7 +28,7 @@ for (let pushToken of somePushTokens) {
     continue;
   }
 
-  // Construct a message (see https://docs.expo.io/versions/latest/guides/push-notifications)
+  // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
   messages.push({
     to: pushToken,
     sound: 'default',
@@ -56,7 +56,7 @@ let tickets = [];
       // NOTE: If a ticket contains an error code in ticket.details.error, you
       // must handle it appropriately. The error codes are listed in the Expo
       // documentation:
-      // https://docs.expo.io/versions/latest/guides/push-notifications#response-format
+      // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
     } catch (error) {
       console.error(error);
     }
@@ -110,7 +110,7 @@ let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
           );
           if (details && details.error) {
             // The error codes are listed in the Expo documentation:
-            // https://docs.expo.io/versions/latest/guides/push-notifications/#individual-errors
+            // https://docs.expo.io/push-notifications/sending-notifications/#individual-errors
             // You must handle the errors appropriately.
             console.error(`The error code is ${details.error}`);
           }
