@@ -38,6 +38,7 @@ export class Expo {
 
   private httpAgent: Agent | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
+  private accessToken: string | undefined;
 
   constructor(options: ExpoClientOptions = {}) {
     this.httpAgent = options.httpAgent;
@@ -46,6 +47,7 @@ export class Expo {
         ? options.maxConcurrentRequests
         : DEFAULT_CONCURRENT_REQUEST_LIMIT
     );
+    this.accessToken = options.accessToken;
   }
 
   /**
@@ -194,6 +196,9 @@ export class Expo {
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
     });
+    if (this.accessToken) {
+      requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
+    }
 
     if (options.body != null) {
       const json = JSON.stringify(options.body);
@@ -328,6 +333,7 @@ function gzipAsync(data: Buffer): Promise<Buffer> {
 export type ExpoClientOptions = {
   httpAgent?: Agent;
   maxConcurrentRequests?: number;
+  accessToken?: string;
 };
 
 export type ExpoPushToken = string;

@@ -15,7 +15,8 @@ yarn add expo-server-sdk
 import { Expo } from 'expo-server-sdk';
 
 // Create a new Expo SDK client
-let expo = new Expo();
+// optionally providing an access token if you have enabled push security
+let expo = new Expo({ accessToken: process.env.EXPO_ACCESS_TOKEN });
 
 // Create the messages that you want to send to clients
 let messages = [];

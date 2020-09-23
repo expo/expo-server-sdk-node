@@ -22,7 +22,7 @@ test('limits the number of concurrent requests', async () => {
 });
 
 describe('sending push notification messages', () => {
-  test('sends requests to the Expo API server', async () => {
+  test('sends requests to the Expo API server without a supplied access token', async () => {
     const mockTickets = [
       { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
       { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
@@ -38,6 +38,26 @@ describe('sending push notification messages', () => {
     expect(options.headers.get('accept-encoding')).toContain('gzip');
     expect(options.headers.get('content-type')).toContain('application/json');
     expect(options.headers.get('user-agent')).toMatch(/^expo-server-sdk-node\//);
+    expect(options.headers.get('Authorization')).toBeNull();
+  });
+
+  test('sends requests to the Expo API server with a supplied access token', async () => {
+    const mockTickets = [
+      { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
+      { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
+    ];
+    (fetch as any).mock('https://exp.host/--/api/v2/push/send', { data: mockTickets });
+
+    const client = new ExpoClient({ accessToken: 'foobar' });
+    const tickets = await client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]);
+    expect(tickets).toEqual(mockTickets);
+
+    const [, options] = (fetch as any).lastCall('https://exp.host/--/api/v2/push/send');
+    expect(options.headers.get('accept')).toContain('application/json');
+    expect(options.headers.get('accept-encoding')).toContain('gzip');
+    expect(options.headers.get('content-type')).toContain('application/json');
+    expect(options.headers.get('user-agent')).toMatch(/^expo-server-sdk-node\//);
+    expect(options.headers.get('Authorization')).toContain('Bearer foobar');
   });
 
   test('compresses request bodies over 1 KiB', async () => {
