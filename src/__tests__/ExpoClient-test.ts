@@ -6,21 +6,6 @@ afterEach(() => {
   (fetch as any).reset();
 });
 
-test('limits the number of concurrent requests', async () => {
-  (fetch as any).mock('https://exp.host/--/api/v2/push/send', { data: [] });
-  expect((fetch as any).calls().length).toBe(0);
-
-  const client = new ExpoClient({ maxConcurrentRequests: 1 });
-  const sendPromise1 = client.sendPushNotificationsAsync([]);
-  const sendPromise2 = client.sendPushNotificationsAsync([]);
-
-  expect((fetch as any).calls().length).toBe(1);
-  await sendPromise1;
-  expect((fetch as any).calls().length).toBe(2);
-  await sendPromise2;
-  expect((fetch as any).calls().length).toBe(2);
-});
-
 describe('sending push notification messages', () => {
   test('sends requests to the Expo API server without a supplied access token', async () => {
     const mockTickets = [
@@ -187,6 +172,26 @@ describe('sending push notification messages', () => {
       others: expect.arrayContaining([expect.any(Error)]),
     });
   });
+
+  test('handles 429 too many request by applying exponential backoff', async () => {
+    (fetch as any).mock(
+      'https://exp.host/--/api/v2/push/send',
+      {
+        status: 429,
+        body: {
+          errors: [{ code: 'RATE_LIMIT_ERROR', message: `Rate limit exceeded` }],
+        },
+      },
+      { repeat: 3 }
+    );
+
+    const client = new ExpoClient();
+    const rejection = expect(client.sendPushNotificationsAsync([])).rejects;
+    await rejection.toThrowError(`Rate limit exceeded`);
+    await rejection.toMatchObject({ code: 'RATE_LIMIT_ERROR' });
+
+    expect((fetch as any).done()).toBeTruthy();
+  }, 10000);
 });
 
 describe('retrieving push notification receipts', () => {

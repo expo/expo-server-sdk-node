@@ -4,11 +4,12 @@
  * Use this if you are running Node on your server backend when you are working with Expo
  * https://expo.io
  */
-import * as assert from 'assert';
+import assert from 'assert';
 import { Agent } from 'http';
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
-import * as promiseLimit from 'promise-limit';
-import * as zlib from 'zlib';
+import promiseLimit from 'promise-limit';
+import promiseRetry from 'promise-retry';
+import zlib from 'zlib';
 
 const BASE_URL = 'https://exp.host';
 const BASE_API_URL = `${BASE_URL}/--/api/v2`;
@@ -74,13 +75,30 @@ export class Expo {
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     const actualMessagesCount = Expo._getActualMessageCount(messages);
 
-    const data = await this.requestAsync(`${BASE_API_URL}/push/send`, {
-      httpMethod: 'post',
-      body: messages,
-      shouldCompress(body) {
-        return body.length > 1024;
+    const data = await promiseRetry(
+      async (retry): Promise<any> => {
+        try {
+          return await this.requestAsync(`${BASE_API_URL}/push/send`, {
+            httpMethod: 'post',
+            body: messages,
+            shouldCompress(body) {
+              return body.length > 1024;
+            },
+          });
+        } catch (e: any) {
+          // if Expo servers rate limit, retry with exponential backoff
+          if (e.statusCode === 429) {
+            return retry(e);
+          }
+          throw e;
+        }
       },
-    });
+      {
+        retries: 2,
+        factor: 2,
+        minTimeout: 1000,
+      }
+    );
 
     if (!Array.isArray(data) || data.length !== actualMessagesCount) {
       const apiError: ExtensibleError = new Error(
@@ -236,7 +254,7 @@ export class Expo {
     }
 
     if (result.errors) {
-      const apiError = this.getErrorFromResult(result);
+      const apiError = this.getErrorFromResult(response, result);
       throw apiError;
     }
 
@@ -258,7 +276,7 @@ export class Expo {
       return apiError;
     }
 
-    return this.getErrorFromResult(result);
+    return this.getErrorFromResult(response, result);
   }
 
   private async getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
@@ -274,13 +292,14 @@ export class Expo {
    * Returns an error for the first API error in the result, with an optional `others` field that
    * contains any other errors.
    */
-  private getErrorFromResult(result: ApiResult): Error {
+  private getErrorFromResult(response: FetchResponse, result: ApiResult): Error {
     assert(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
     const [errorData, ...otherErrorData] = result.errors!;
     const error: ExtensibleError = this.getErrorFromResultError(errorData);
     if (otherErrorData.length) {
       error.others = otherErrorData.map((data) => this.getErrorFromResultError(data));
     }
+    error.statusCode = response.status;
     return error;
   }
 

@@ -6,6 +6,7 @@
     "sourceMap": true,
     "declaration": true,
     "types": ["jest", "node"],
+    "esModuleInterop": true,
     "outDir": "./build",
     "rootDir": "./src",
     "strict": true
