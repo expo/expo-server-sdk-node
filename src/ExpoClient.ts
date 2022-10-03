@@ -75,30 +75,32 @@ export class Expo {
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     const actualMessagesCount = Expo._getActualMessageCount(messages);
 
-    const data = await promiseRetry(
-      async (retry): Promise<any> => {
-        try {
-          return await this.requestAsync(`${BASE_API_URL}/push/send`, {
-            httpMethod: 'post',
-            body: messages,
-            shouldCompress(body) {
-              return body.length > 1024;
-            },
-          });
-        } catch (e: any) {
-          // if Expo servers rate limit, retry with exponential backoff
-          if (e.statusCode === 429) {
-            return retry(e);
+    const data = await this.limitConcurrentRequests(async () => {
+      return await promiseRetry(
+        async (retry): Promise<any> => {
+          try {
+            return await this.requestAsync(`${BASE_API_URL}/push/send`, {
+              httpMethod: 'post',
+              body: messages,
+              shouldCompress(body) {
+                return body.length > 1024;
+              },
+            });
+          } catch (e: any) {
+            // if Expo servers rate limit, retry with exponential backoff
+            if (e.statusCode === 429) {
+              return retry(e);
+            }
+            throw e;
           }
-          throw e;
+        },
+        {
+          retries: 2,
+          factor: 2,
+          minTimeout: 1000,
         }
-      },
-      {
-        retries: 2,
-        factor: 2,
-        minTimeout: 1000,
-      }
-    );
+      );
+    });
 
     if (!Array.isArray(data) || data.length !== actualMessagesCount) {
       const apiError: ExtensibleError = new Error(
@@ -229,14 +231,12 @@ export class Expo {
       requestHeaders.set('Content-Type', 'application/json');
     }
 
-    const response = await this.limitConcurrentRequests(() =>
-      fetch(url, {
-        method: options.httpMethod,
-        body: requestBody,
-        headers: requestHeaders,
-        agent: this.httpAgent,
-      })
-    );
+    const response = await fetch(url, {
+      method: options.httpMethod,
+      body: requestBody,
+      headers: requestHeaders,
+      agent: this.httpAgent,
+    });
 
     if (response.status !== 200) {
       const apiError = await this.parseErrorResponseAsync(response);
