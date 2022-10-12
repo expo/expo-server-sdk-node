@@ -193,7 +193,7 @@ describe('sending push notification messages', () => {
     await rejection.toMatchObject({ code: 'RATE_LIMIT_ERROR' });
 
     expect((fetch as any).done()).toBeTruthy();
-  }, 10000);
+  });
 
   test('handles 429 Too Many Requests and succeeds when a retry succeeds', async () => {
     const mockTickets = [
@@ -223,7 +223,7 @@ describe('sending push notification messages', () => {
     );
 
     expect((fetch as any).done()).toBeTruthy();
-  }, 10000);
+  });
 });
 
 describe('retrieving push notification receipts', () => {
