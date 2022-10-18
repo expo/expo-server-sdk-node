@@ -2,6 +2,10 @@ import fetch from 'node-fetch';
 
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 
+jest.mock('../ExpoClientValues', () => ({
+  requestRetryMinTimeout: 1,
+}));
+
 afterEach(() => {
   (fetch as any).reset();
 });

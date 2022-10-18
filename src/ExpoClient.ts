@@ -11,6 +11,8 @@ import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
 import zlib from 'zlib';
 
+import { requestRetryMinTimeout } from './ExpoClientValues';
+
 const BASE_URL = 'https://exp.host';
 const BASE_API_URL = `${BASE_URL}/--/api/v2`;
 
@@ -97,7 +99,7 @@ export class Expo {
         {
           retries: 2,
           factor: 2,
-          minTimeout: 1000,
+          minTimeout: requestRetryMinTimeout,
         }
       );
     });
