@@ -402,7 +402,14 @@ export type ExpoPushErrorReceipt = {
   status: 'error';
   message: string;
   details?: {
-    error?: 'DeviceNotRegistered' | 'InvalidCredentials' | 'MessageTooBig' | 'MessageRateExceeded';
+    error?:
+      | 'DeviceNotRegistered'
+      | 'InvalidCredentials'
+      | 'MessageTooBig'
+      | 'MessageRateExceeded'
+      | 'ProviderError';
+    fault?: 'fcm' | 'apns';
+    fcm: { error: 'MismatchSenderId' };
   };
   // Internal field used only by developers working on Expo
   __debug?: any;
