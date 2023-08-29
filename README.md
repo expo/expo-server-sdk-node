@@ -125,6 +125,98 @@ let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
 
 ```
 
+## Usage with TypeScript (We need this, today TS is LIFE and when we try to use the Types from 'expo-server-sdk' this doenst resolve. So I needed to resolve creating my TYPES and using with NO ERRORS)
+```ts
+import {
+  Expo,
+  ExpoPushMessage,
+  ExpoPushTicket,
+  ExpoPushReceiptId,
+  ExpoPushReceipt
+} from 'expo-server-sdk'
+
+    const somePushTokens = ['ExponentPushToken[XXXXXXXXXXXXXXXX]']
+    const messages: ExpoPushMessage[] = []
+
+    for (const pushToken of somePushTokens) {
+      if (!Expo.isExpoPushToken(pushToken)) {
+        console.error(`Push token ${pushToken} is not a valid Expo push token`)
+        continue
+      }
+
+      messages.push({
+        to: pushToken,
+        sound: 'default',
+        body: 'Look at the app',
+        title: 'Be Welcome!',
+        data: { exampleData: 'DataExample' },
+      })
+    }
+
+    const chunks = expo.chunkPushNotifications(messages)
+
+  type ExpoPushTickets = ExpoPushTicket & {
+    id: string
+  }
+
+  const tickets: ExpoPushTickets[] = [];
+  (async () => {
+    for (const chunk of chunks) {
+      try {
+        const ticketChunk = await expo.sendPushNotificationsAsync(chunk) as ExpoPushTickets[]
+        console.log('ticketChunk -->', ticketChunk)
+        tickets.push(...ticketChunk)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })()
+
+  const receiptIds: ExpoPushReceiptId[] = []
+  for (const ticket of tickets) {
+    if (ticket.id) {
+      receiptIds.push(ticket.id)
+    }
+  }
+
+  type ExpoPushReceipts = ExpoPushReceipt & {
+    message: string
+  }
+  type TReceipts = {
+    [id: string]: ExpoPushReceipts
+  }
+  const receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
+  (async () => {
+    for (const chunk of receiptIdChunks) {
+      try {
+        const receipts =
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await expo.getPushNotificationReceiptsAsync(chunk) as TReceipts
+        console.log('receipts -->', receipts)
+
+        for (const receiptId in receipts) {
+          const { status, details, message } = receipts[receiptId]
+          if (status === 'ok') {
+            continue
+          } else if (status === 'error') {
+            console.error(
+              `There was an error sending a notification: ${message}`
+            )
+            if (details && details.error) {
+              console.error(`The error code is ${details.error}`)
+            }
+          }
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })()
+
+```
+
+
+
 ## Developing
 
 The source code is in the `src/` directory and babel is used to turn it into ES5 that goes in the `build/` directory.
