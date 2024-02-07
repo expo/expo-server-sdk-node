@@ -380,10 +380,39 @@ export type ExpoPushMessage = {
   mutableContent?: boolean;
 };
 
+export enum ExpoPushResponse {
+  ERROR = 'error',
+  OK = 'ok',
+}
+
+export enum ExpoPushResponseErrorNames {
+  DEVICE_NOT_REGISTERED = 'DeviceNotRegistered',
+  INVALID_CREDENTIALS = 'InvalidCredentials',
+  MESSAGE_TOO_BIG = 'MessageTooBig',
+  MESSAGE_RATE_EXCEEDED = 'MessageRateExceeded',
+}
+
+export type DeviceNotRegistered = {
+  error: ExpoPushResponseErrorNames.DEVICE_NOT_REGISTERED;
+  expoPushToken: string;
+}
+
+export type InvalidCredentials = {
+  error: ExpoPushResponseErrorNames.INVALID_CREDENTIALS;
+}
+
+export type MessageTooBig = {
+  error: ExpoPushResponseErrorNames.MESSAGE_TOO_BIG;
+}
+
+export type MessageRateExceeded = {
+  error: ExpoPushResponseErrorNames.MESSAGE_RATE_EXCEEDED;
+}
+
 export type ExpoPushReceiptId = string;
 
 export type ExpoPushSuccessTicket = {
-  status: 'ok';
+  status: ExpoPushResponse.OK;
   id: ExpoPushReceiptId;
 };
 
@@ -392,14 +421,14 @@ export type ExpoPushErrorTicket = ExpoPushErrorReceipt;
 export type ExpoPushTicket = ExpoPushSuccessTicket | ExpoPushErrorTicket;
 
 export type ExpoPushSuccessReceipt = {
-  status: 'ok';
+  status: ExpoPushResponse.OK;
   details?: object;
   // Internal field used only by developers working on Expo
   __debug?: any;
 };
 
 export type ExpoPushErrorReceipt = {
-  status: 'error';
+  status: ExpoPushResponse.ERROR;
   message: string;
   details?: {
     error?: 'DeviceNotRegistered' | 'InvalidCredentials' | 'MessageTooBig' | 'MessageRateExceeded';
