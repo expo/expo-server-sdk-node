@@ -67,7 +67,7 @@ let tickets = [];
 ...
 
 // Later, after the Expo push notification service has delivered the
-// notifications to Apple or Google (usually quickly, but allow the the service
+// notifications to Apple or Google (usually quickly, but allow the service
 // up to 30 minutes when under load), a "receipt" for each notification is
 // created. The receipts will be available for at least a day; stale receipts
 // are deleted.
