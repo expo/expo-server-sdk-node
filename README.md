@@ -18,7 +18,7 @@ import { Expo } from 'expo-server-sdk';
 // optionally providing an access token if you have enabled push security
 let expo = new Expo({
   accessToken: process.env.EXPO_ACCESS_TOKEN,
-  useFCMv1: false // this can be set to true in order to use the FCM v1 API
+  useFcmV1: false // this can be set to true in order to use the FCM v1 API
 });
 
 // Create the messages that you want to send to clients
