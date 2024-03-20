@@ -409,7 +409,14 @@ export type ExpoPushErrorReceipt = {
   status: 'error';
   message: string;
   details?: {
-    error?: 'DeviceNotRegistered' | 'InvalidCredentials' | 'MessageTooBig' | 'MessageRateExceeded';
+    error?:
+      | 'DeveloperError'
+      | 'DeviceNotRegistered'
+      | 'ExpoError'
+      | 'InvalidCredentials'
+      | 'MessageRateExceeded'
+      | 'MessageTooBig'
+      | 'ProviderError';
   };
   // Internal field used only by developers working on Expo
   __debug?: any;
