@@ -77,8 +77,11 @@ export class Expo {
    * sized chunks.
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
+    // @ts-expect-error We don't yet have type declarations for URL
     const url = new URL(`${BASE_API_URL}/push/send`);
-    if (this.useFcmV1) url.searchParams.append('useFcmV1', 'true');
+    if (typeof this.useFcmV1 === 'boolean') {
+      url.searchParams.append('useFcmV1', this.useFcmV1);
+    }
     const actualMessagesCount = Expo._getActualMessageCount(messages);
     const data = await this.limitConcurrentRequests(async () => {
       return await promiseRetry(
