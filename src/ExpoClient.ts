@@ -410,8 +410,6 @@ export type ExpoPushErrorReceipt = {
       | 'MessageRateExceeded'
       | 'MessageTooBig'
       | 'ProviderError';
-    fault?: 'fcm' | 'apns';
-    fcm: { error: 'MismatchSenderId' };
   };
   // Internal field used only by developers working on Expo
   __debug?: any;
