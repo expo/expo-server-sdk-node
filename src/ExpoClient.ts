@@ -403,10 +403,12 @@ export type ExpoPushErrorReceipt = {
   message: string;
   details?: {
     error?:
+      | 'DeveloperError'
       | 'DeviceNotRegistered'
+      | 'ExpoError'
       | 'InvalidCredentials'
-      | 'MessageTooBig'
       | 'MessageRateExceeded'
+      | 'MessageTooBig'
       | 'ProviderError';
     fault?: 'fcm' | 'apns';
     fcm: { error: 'MismatchSenderId' };
