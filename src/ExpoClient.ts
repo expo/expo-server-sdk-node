@@ -2,7 +2,8 @@
  * expo-server-sdk
  *
  * Use this if you are running Node on your server backend when you are working with Expo
- * https://expo.io
+ * Application Services
+ * https://expo.dev
  */
 import assert from 'assert';
 import { Agent } from 'http';
@@ -47,7 +48,7 @@ export class Expo {
     this.limitConcurrentRequests = promiseLimit(
       options.maxConcurrentRequests != null
         ? options.maxConcurrentRequests
-        : DEFAULT_CONCURRENT_REQUEST_LIMIT
+        : DEFAULT_CONCURRENT_REQUEST_LIMIT,
     );
     this.accessToken = options.accessToken;
     this.useFcmV1 = options.useFcmV1;
@@ -77,10 +78,9 @@ export class Expo {
    * sized chunks.
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
-    // @ts-expect-error We don't yet have type declarations for URL
     const url = new URL(`${BASE_API_URL}/push/send`);
     if (typeof this.useFcmV1 === 'boolean') {
-      url.searchParams.append('useFcmV1', this.useFcmV1);
+      url.searchParams.append('useFcmV1', String(this.useFcmV1));
     }
     const actualMessagesCount = Expo._getActualMessageCount(messages);
     const data = await this.limitConcurrentRequests(async () => {
@@ -106,7 +106,7 @@ export class Expo {
           retries: 2,
           factor: 2,
           minTimeout: requestRetryMinTimeout,
-        }
+        },
       );
     });
 
@@ -114,7 +114,7 @@ export class Expo {
       const apiError: ExtensibleError = new Error(
         `Expected Expo to respond with ${actualMessagesCount} ${
           actualMessagesCount === 1 ? 'ticket' : 'tickets'
-        } but got ${data.length}`
+        } but got ${data.length}`,
       );
       apiError.data = data;
       throw apiError;
@@ -124,7 +124,7 @@ export class Expo {
   }
 
   async getPushNotificationReceiptsAsync(
-    receiptIds: ExpoPushReceiptId[]
+    receiptIds: ExpoPushReceiptId[],
   ): Promise<{ [id: string]: ExpoPushReceipt }> {
     const data = await this.requestAsync(`${BASE_API_URL}/push/getReceipts`, {
       httpMethod: 'post',
@@ -136,7 +136,7 @@ export class Expo {
 
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       const apiError: ExtensibleError = new Error(
-        `Expected Expo to respond with a map from receipt IDs to receipts but received data of another type`
+        `Expected Expo to respond with a map from receipt IDs to receipts but received data of another type`,
       );
       apiError.data = data;
       throw apiError;
@@ -256,7 +256,7 @@ export class Expo {
     let result: ApiResult;
     try {
       result = JSON.parse(textBody);
-    } catch (e) {
+    } catch {
       const apiError = await this.getTextResponseErrorAsync(response, textBody);
       throw apiError;
     }
@@ -274,7 +274,7 @@ export class Expo {
     let result: ApiResult;
     try {
       result = JSON.parse(textBody);
-    } catch (e) {
+    } catch {
       return await this.getTextResponseErrorAsync(response, textBody);
     }
 
@@ -289,7 +289,7 @@ export class Expo {
 
   private async getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
     const apiError: ExtensibleError = new Error(
-      `Expo responded with an error with status code ${response.status}: ` + text
+      `Expo responded with an error with status code ${response.status}: ` + text,
     );
     apiError.statusCode = response.status;
     apiError.errorText = text;
