@@ -102,13 +102,13 @@ describe('sending push notification messages', () => {
     (fetch as any).mock('https://exp.host/--/api/v2/push/send', { data: mockTickets });
 
     const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrowError(
+    await expect(client.sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrow(
       `Expected Expo to respond with 1 ticket but got 2`,
     );
 
     await expect(
       client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }, { to: 'c' }]),
-    ).rejects.toThrowError(`Expected Expo to respond with 3 tickets but got 2`);
+    ).rejects.toThrow(`Expected Expo to respond with 3 tickets but got 2`);
   });
 
   test('handles 200 HTTP responses with well-formed API errors', async () => {
@@ -119,7 +119,7 @@ describe('sending push notification messages', () => {
 
     const client = new ExpoClient();
     const rejection = expect(client.sendPushNotificationsAsync([])).rejects;
-    await rejection.toThrowError(`This is a test error`);
+    await rejection.toThrow(`This is a test error`);
     await rejection.toMatchObject({ code: 'TEST_API_ERROR' });
   });
 
@@ -130,7 +130,7 @@ describe('sending push notification messages', () => {
     });
 
     const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([])).rejects.toThrowError(
+    await expect(client.sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
@@ -145,7 +145,7 @@ describe('sending push notification messages', () => {
 
     const client = new ExpoClient();
     const rejection = expect(client.sendPushNotificationsAsync([])).rejects;
-    await rejection.toThrowError(`This is a test error`);
+    await rejection.toThrow(`This is a test error`);
     await rejection.toMatchObject({ code: 'TEST_API_ERROR' });
   });
 
@@ -156,7 +156,7 @@ describe('sending push notification messages', () => {
     });
 
     const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([])).rejects.toThrowError(
+    await expect(client.sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
@@ -168,7 +168,7 @@ describe('sending push notification messages', () => {
     });
 
     const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([])).rejects.toThrowError(
+    await expect(client.sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
@@ -196,7 +196,7 @@ describe('sending push notification messages', () => {
 
     const client = new ExpoClient();
     const rejection = expect(client.sendPushNotificationsAsync([])).rejects;
-    await rejection.toThrowError(`This is a test error`);
+    await rejection.toThrow(`This is a test error`);
     await rejection.toMatchObject({
       code: 'TEST_API_ERROR',
       details: { __debug: 'test debug information' },
@@ -221,7 +221,7 @@ describe('sending push notification messages', () => {
     const ticketPromise = client.sendPushNotificationsAsync([]);
 
     const rejection = expect(ticketPromise).rejects;
-    await rejection.toThrowError(`Rate limit exceeded`);
+    await rejection.toThrow(`Rate limit exceeded`);
     await rejection.toMatchObject({ code: 'RATE_LIMIT_ERROR' });
 
     expect((fetch as any).done()).toBeTruthy();
@@ -287,7 +287,7 @@ describe('retrieving push notification receipts', () => {
     const rejection = expect(
       client.getPushNotificationReceiptsAsync(['XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX']),
     ).rejects;
-    await rejection.toThrowError(`Expected Expo to respond with a map`);
+    await rejection.toThrow(`Expected Expo to respond with a map`);
     await rejection.toMatchObject({ data: mockReceipts });
   });
 });
