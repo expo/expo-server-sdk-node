@@ -216,7 +216,7 @@ export class Expo {
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
     let requestBody: string | Buffer | undefined;
 
-    const sdkVersion = require('../package.json').version;
+    const sdkVersion = process.env.npm_package_version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
