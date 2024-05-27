@@ -11,5 +11,5 @@
     "rootDir": "./src",
     "strict": true
   },
-  "exclude": ["node_modules", "**/__mocks__", "**/__tests__"]
+  "exclude": ["node_modules", "**/__mocks__", "**/__tests__", "build"]
 }
