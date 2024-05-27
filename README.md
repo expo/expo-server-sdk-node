@@ -88,7 +88,7 @@ let receiptIds = [];
 for (let ticket of tickets) {
   // NOTE: Not all tickets have IDs; for example, tickets for notifications
   // that could not be enqueued will have error information and no receipt ID.
-   if (ticket.status == "ok") {
+   if (ticket.status === 'ok') {
     receiptIds.push(ticket.id);
   }
 }
