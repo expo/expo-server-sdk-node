@@ -1,4 +1,5 @@
 # expo-server-sdk-node ![Tests](https://github.com/expo/expo-server-sdk-node/workflows/Tests/badge.svg) [![codecov](https://codecov.io/gh/expo/expo-server-sdk-node/branch/master/graph/badge.svg)](https://codecov.io/gh/expo/expo-server-sdk-node)
+
 Server-side library for working with Expo using Node.js.
 
 If you have problems with the code in this repository, please file issues & bug reports at https://github.com/expo/expo. Thanks!
@@ -132,11 +133,11 @@ let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
 
 The source code is in the `src/` directory and babel is used to turn it into ES5 that goes in the `build/` directory.
 
-To build, `npm run build`.
+To build, `yarn build`.
 
-To build and watch for changes, `npm run watch`.
+To build and watch for changes, `yarn watch`.
 
 ## See Also
 
-  * https://github.com/expo-community/expo-server-sdk-ruby
-  * https://github.com/expo-community/expo-server-sdk-python
+- https://github.com/expo-community/expo-server-sdk-ruby
+- https://github.com/expo-community/expo-server-sdk-python
