@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 
 jest.mock('../ExpoClientValues', () => ({
