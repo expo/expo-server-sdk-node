@@ -6,12 +6,12 @@
  * https://expo.dev
  */
 import assert from 'assert';
-import { Agent } from 'http';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
 import zlib from 'zlib';
 
 import { requestRetryMinTimeout } from './ExpoClientValues';
+import { Agent, fetch } from 'undici';
 
 const BASE_URL = 'https://exp.host';
 const BASE_API_URL = `${BASE_URL}/--/api/v2`;
@@ -216,13 +216,21 @@ export class Expo {
     let requestBody: string | Buffer | undefined;
 
     const sdkVersion = require('../package.json').version;
-    const requestHeaders = new Headers({
+    type RequestHeaders = {
+      Accept: string;
+      'Accept-Encoding': string;
+      'User-Agent': string;
+      Authorization?: string;
+      'Content-Encoding'?: string;
+      'Content-Type'?: string;
+    };
+    const requestHeaders: RequestHeaders = {
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
-    });
+    };
     if (this.accessToken) {
-      requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
+      requestHeaders['Authorization'] = `Bearer ${this.accessToken}`;
     }
 
     if (options.body != null) {
@@ -230,19 +238,19 @@ export class Expo {
       assert(json != null, `JSON request body must not be null`);
       if (options.shouldCompress(json)) {
         requestBody = await gzipAsync(Buffer.from(json));
-        requestHeaders.set('Content-Encoding', 'gzip');
+        requestHeaders['Content-Encoding'] = 'gzip';
       } else {
         requestBody = json;
       }
 
-      requestHeaders.set('Content-Type', 'application/json');
+      requestHeaders['Content-Type'] = 'application/json';
     }
 
     const response = await fetch(url, {
       method: options.httpMethod,
       body: requestBody,
       headers: requestHeaders,
-      // define agent
+      dispatcher: this.httpAgent,
     });
 
     if (response.status !== 200) {
