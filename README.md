@@ -141,3 +141,4 @@ To build and watch for changes, `yarn watch`.
 
 - https://github.com/expo-community/expo-server-sdk-ruby
 - https://github.com/expo-community/expo-server-sdk-python
+- https://github.com/katayama8000/expo-push-notification-client-rust
