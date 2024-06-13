@@ -41,7 +41,6 @@ export class Expo {
   private httpAgent: Agent | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
-  private useFcmV1: boolean | undefined;
 
   constructor(options: ExpoClientOptions = {}) {
     this.httpAgent = options.httpAgent;
@@ -51,7 +50,6 @@ export class Expo {
         : DEFAULT_CONCURRENT_REQUEST_LIMIT,
     );
     this.accessToken = options.accessToken;
-    this.useFcmV1 = options.useFcmV1;
   }
 
   /**
@@ -79,9 +77,6 @@ export class Expo {
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     const url = new URL(`${BASE_API_URL}/push/send`);
-    if (typeof this.useFcmV1 === 'boolean') {
-      url.searchParams.append('useFcmV1', String(this.useFcmV1));
-    }
     const actualMessagesCount = Expo._getActualMessageCount(messages);
     const data = await this.limitConcurrentRequests(async () => {
       return await promiseRetry(
@@ -359,7 +354,6 @@ export type ExpoClientOptions = {
   httpAgent?: Agent;
   maxConcurrentRequests?: number;
   accessToken?: string;
-  useFcmV1?: boolean;
 };
 
 export type ExpoPushToken = string;
