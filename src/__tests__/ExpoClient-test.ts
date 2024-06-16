@@ -49,34 +49,6 @@ describe('sending push notification messages', () => {
     expect(options.headers.get('Authorization')).toContain('Bearer foobar');
   });
 
-  describe('the useFcmV1 option', () => {
-    beforeEach(() => {
-      (fetch as any).any({ data: [{ status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' }] });
-    });
-
-    test('sends requests to the Expo API server without the useFcmV1 parameter', async () => {
-      const client = new ExpoClient();
-      await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called('https://exp.host/--/api/v2/push/send')).toBe(true);
-    });
-
-    test('sends requests to the Expo API server with useFcmV1=true', async () => {
-      const client = new ExpoClient({ useFcmV1: true });
-      await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called('https://exp.host/--/api/v2/push/send?useFcmV1=true')).toBe(
-        true,
-      );
-    });
-
-    test('sends requests to the Expo API server with useFcmV1=false', async () => {
-      const client = new ExpoClient({ useFcmV1: false });
-      await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called('https://exp.host/--/api/v2/push/send?useFcmV1=false')).toBe(
-        true,
-      );
-    });
-  });
-
   test('compresses request bodies over 1 KiB', async () => {
     const mockTickets = [{ status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' }];
     (fetch as any).mock('https://exp.host/--/api/v2/push/send', { data: mockTickets });
