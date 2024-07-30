@@ -418,6 +418,7 @@ export type ExpoPushErrorReceipt = {
       | 'MessageTooBig'
       | 'ProviderError';
   };
+  expoPushToken?: string;
   // Internal field used only by developers working on Expo
   __debug?: any;
 };
