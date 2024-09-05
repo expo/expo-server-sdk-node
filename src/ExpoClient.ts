@@ -12,31 +12,18 @@ import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
 import zlib from 'zlib';
 
-import { requestRetryMinTimeout } from './ExpoClientValues';
-
-const BASE_URL = 'https://exp.host';
-const BASE_API_URL = `${BASE_URL}/--/api/v2`;
-
-/**
- * The max number of push notifications to be sent at once. Since we can't automatically upgrade
- * everyone using this library, we should strongly try not to decrease it.
- */
-const PUSH_NOTIFICATION_CHUNK_LIMIT = 100;
-
-/**
- * The max number of push notification receipts to request at once.
- */
-const PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT = 300;
-
-/**
- * The default max number of concurrent HTTP requests to send at once and spread out the load,
- * increasing the reliability of notification delivery.
- */
-const DEFAULT_CONCURRENT_REQUEST_LIMIT = 6;
+import {
+  defaultConcurrentRequestLimit,
+  getReceiptsApiUrl,
+  pushNotificationChunkLimit,
+  pushNotificationReceiptChunkLimit,
+  requestRetryMinTimeout,
+  sendApiUrl,
+} from './ExpoClientValues';
 
 export class Expo {
-  static pushNotificationChunkSizeLimit = PUSH_NOTIFICATION_CHUNK_LIMIT;
-  static pushNotificationReceiptChunkSizeLimit = PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT;
+  static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
+  static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
 
   private httpAgent: Agent | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
@@ -48,7 +35,7 @@ export class Expo {
     this.limitConcurrentRequests = promiseLimit(
       options.maxConcurrentRequests != null
         ? options.maxConcurrentRequests
-        : DEFAULT_CONCURRENT_REQUEST_LIMIT,
+        : defaultConcurrentRequestLimit,
     );
     this.accessToken = options.accessToken;
     this.useFcmV1 = options.useFcmV1;
@@ -78,7 +65,7 @@ export class Expo {
    * sized chunks.
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
-    const url = new URL(`${BASE_API_URL}/push/send`);
+    const url = new URL(sendApiUrl);
     if (typeof this.useFcmV1 === 'boolean') {
       url.searchParams.append('useFcmV1', String(this.useFcmV1));
     }
@@ -126,7 +113,7 @@ export class Expo {
   async getPushNotificationReceiptsAsync(
     receiptIds: ExpoPushReceiptId[],
   ): Promise<{ [id: string]: ExpoPushReceipt }> {
-    const data = await this.requestAsync(`${BASE_API_URL}/push/getReceipts`, {
+    const data = await this.requestAsync(getReceiptsApiUrl, {
       httpMethod: 'post',
       body: { ids: receiptIds },
       shouldCompress(body) {
@@ -156,7 +143,7 @@ export class Expo {
         for (const recipient of message.to) {
           partialTo.push(recipient);
           chunkMessagesCount++;
-          if (chunkMessagesCount >= PUSH_NOTIFICATION_CHUNK_LIMIT) {
+          if (chunkMessagesCount >= pushNotificationChunkLimit) {
             // Cap this chunk here if it already exceeds PUSH_NOTIFICATION_CHUNK_LIMIT.
             // Then create a new chunk to continue on the remaining recipients for this message.
             chunk.push({ ...message, to: partialTo });
@@ -175,7 +162,7 @@ export class Expo {
         chunkMessagesCount++;
       }
 
-      if (chunkMessagesCount >= PUSH_NOTIFICATION_CHUNK_LIMIT) {
+      if (chunkMessagesCount >= pushNotificationChunkLimit) {
         // Cap this chunk if it exceeds PUSH_NOTIFICATION_CHUNK_LIMIT.
         // Then create a new chunk to continue on the remaining messages.
         chunks.push(chunk);
@@ -192,7 +179,7 @@ export class Expo {
   }
 
   chunkPushNotificationReceiptIds(receiptIds: ExpoPushReceiptId[]): ExpoPushReceiptId[][] {
-    return this.chunkItems(receiptIds, PUSH_NOTIFICATION_RECEIPT_CHUNK_LIMIT);
+    return this.chunkItems(receiptIds, pushNotificationReceiptChunkLimit);
   }
 
   private chunkItems<T>(items: T[], chunkSize: number): T[][] {
