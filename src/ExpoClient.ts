@@ -66,7 +66,8 @@ export class Expo {
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     const url = new URL(sendApiUrl);
-    if (typeof this.useFcmV1 === 'boolean') {
+    // Only append the useFcmV1 option if the option is set to false
+    if (this.useFcmV1 === false) {
       url.searchParams.append('useFcmV1', String(this.useFcmV1));
     }
     const actualMessagesCount = Expo._getActualMessageCount(messages);
