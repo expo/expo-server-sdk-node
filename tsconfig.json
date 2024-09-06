@@ -1,15 +1,9 @@
 {
+  "extends": ["@tsconfig/strictest/tsconfig.json", "@tsconfig/node-lts/tsconfig.json"],
   "compilerOptions": {
-    "target": "es2015",
-    "lib": ["es2015"],
-    "module": "commonjs",
     "sourceMap": true,
-    "declaration": true,
-    "types": ["jest", "node"],
-    "esModuleInterop": true,
-    "outDir": "./build",
-    "rootDir": "./src",
-    "strict": true
+    "composite": true,
+    "noEmit": true
   },
-  "exclude": ["node_modules", "**/__mocks__", "**/__tests__", "build"]
+  "exclude": ["build"]
 }

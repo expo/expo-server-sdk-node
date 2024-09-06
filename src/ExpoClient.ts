@@ -5,12 +5,12 @@
  * Application Services
  * https://expo.dev
  */
-import assert from 'assert';
-import { Agent } from 'http';
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
+import assert from 'node:assert';
+import { Agent } from 'node:http';
+import zlib from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
-import zlib from 'zlib';
 
 import {
   defaultConcurrentRequestLimit,
@@ -104,7 +104,7 @@ export class Expo {
           actualMessagesCount === 1 ? 'ticket' : 'tickets'
         } but got ${data.length}`,
       );
-      apiError.data = data;
+      apiError['data'] = data;
       throw apiError;
     }
 
@@ -126,7 +126,7 @@ export class Expo {
       const apiError: ExtensibleError = new Error(
         `Expected Expo to respond with a map from receipt IDs to receipts but received data of another type`,
       );
-      apiError.data = data;
+      apiError['data'] = data;
       throw apiError;
     }
 
@@ -268,7 +268,7 @@ export class Expo {
 
     if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
       const apiError: ExtensibleError = await this.getTextResponseErrorAsync(response, textBody);
-      apiError.errorData = result;
+      apiError['errorData'] = result;
       return apiError;
     }
 
@@ -279,8 +279,8 @@ export class Expo {
     const apiError: ExtensibleError = new Error(
       `Expo responded with an error with status code ${response.status}: ` + text,
     );
-    apiError.statusCode = response.status;
-    apiError.errorText = text;
+    apiError['statusCode'] = response.status;
+    apiError['errorText'] = text;
     return apiError;
   }
 
@@ -289,29 +289,31 @@ export class Expo {
    * contains any other errors.
    */
   private getErrorFromResult(response: FetchResponse, result: ApiResult): Error {
-    assert(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
-    const [errorData, ...otherErrorData] = result.errors!;
-    const error: ExtensibleError = this.getErrorFromResultError(errorData);
+    const noErrorsMessage = `Expected at least one error from Expo`;
+    assert(result.errors, noErrorsMessage);
+    const [errorData, ...otherErrorData] = result.errors;
+    assert.ok(errorData, noErrorsMessage);
+    const error = this.getErrorFromResultError(errorData);
     if (otherErrorData.length) {
-      error.others = otherErrorData.map((data) => this.getErrorFromResultError(data));
+      error['others'] = otherErrorData.map((data) => this.getErrorFromResultError(data));
     }
-    error.statusCode = response.status;
+    error['statusCode'] = response.status;
     return error;
   }
 
   /**
    * Returns an error for a single API error
    */
-  private getErrorFromResultError(errorData: ApiResultError): Error {
+  private getErrorFromResultError(errorData: ApiResultError): ExtensibleError {
     const error: ExtensibleError = new Error(errorData.message);
-    error.code = errorData.code;
+    error['code'] = errorData.code;
 
     if (errorData.details != null) {
-      error.details = errorData.details;
+      error['details'] = errorData.details;
     }
 
     if (errorData.stack != null) {
-      error.serverStack = errorData.stack;
+      error['serverStack'] = errorData.stack;
     }
 
     return error;
