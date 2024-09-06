@@ -11,11 +11,7 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Cache Node.js modules
-      uses: actions/cache@v4
-      with:
-        path: ${{ github.workspace }}/node_modules
-        key: ${{ runner.OS }}-${{ matrix.node-version}}-node_modules-${{ hashFiles('yarn.lock') }}
+        cache: yarn
     - run: yarn --frozen-lockfile
     - run: yarn add -D @types/node@${{ matrix.node-version }}
     - run: yarn tsc
