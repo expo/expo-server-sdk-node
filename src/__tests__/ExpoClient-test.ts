@@ -1,4 +1,6 @@
+import { jest, afterEach, beforeEach, describe, test, expect } from '@jest/globals';
 import fetch from 'node-fetch';
+import assert from 'node:assert';
 
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
@@ -311,8 +313,8 @@ describe('chunking push notification messages', () => {
     const client = new ExpoClient();
     const messages = new Array(10).fill({ to: '?' });
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(1);
-    expect(chunks[0].length).toBe(10);
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toHaveLength(10);
   });
 
   test('chunks single push notification message with lists of recipients', () => {
@@ -323,7 +325,7 @@ describe('chunking push notification messages', () => {
     const chunks = client.chunkPushNotifications(messages);
     for (const chunk of chunks) {
       // Each chunk should only contain a single message with 100 recipients
-      expect(chunk.length).toBe(1);
+      expect(chunk).toHaveLength(1);
     }
     const totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(messagesLength);
@@ -335,9 +337,10 @@ describe('chunking push notification messages', () => {
     const client = new ExpoClient();
     const messages = [{ to: new Array(messagesLength).fill('?') }];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(1);
-    expect(chunks[0].length).toBe(1);
-    expect(chunks[0][0].to.length).toBe(messagesLength);
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toHaveLength(1);
+    assert.ok(chunks[0]);
+    expect(chunks[0][0]?.to).toHaveLength(messagesLength);
   });
 
   test('chunks push notification messages mixed with lists of recipients and single recipient', () => {
@@ -362,17 +365,18 @@ describe('chunking a single push notification message with multiple recipients',
   test('one message with 100 recipients', () => {
     const messages = [{ to: new Array(100).fill('?') }];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(1);
-    expect(chunks[0].length).toBe(1);
-    expect(chunks[0][0].to.length).toBe(100);
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toHaveLength(1);
+    assert.ok(chunks[0]);
+    expect(chunks[0][0]?.to).toHaveLength(100);
   });
 
   test('one message with 101 recipients', () => {
     const messages = [{ to: new Array(101).fill('?') }];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(2);
-    expect(chunks[0].length).toBe(1);
-    expect(chunks[1].length).toBe(1);
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0]).toHaveLength(1);
+    expect(chunks[1]).toHaveLength(1);
     const totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(101);
   });
@@ -380,9 +384,9 @@ describe('chunking a single push notification message with multiple recipients',
   test('one message with 99 recipients and two additional messages', () => {
     const messages = [{ to: new Array(99).fill('?') }, ...new Array(2).fill({ to: '?' })];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(2);
-    expect(chunks[0].length).toBe(2);
-    expect(chunks[1].length).toBe(1);
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0]).toHaveLength(2);
+    expect(chunks[1]).toHaveLength(1);
     const totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(99 + 2);
   });
@@ -390,9 +394,9 @@ describe('chunking a single push notification message with multiple recipients',
   test('one message with 100 recipients and two additional messages', () => {
     const messages = [{ to: new Array(100).fill('?') }, ...new Array(2).fill({ to: '?' })];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(2);
-    expect(chunks[0].length).toBe(1);
-    expect(chunks[1].length).toBe(2);
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0]).toHaveLength(1);
+    expect(chunks[1]).toHaveLength(2);
     const totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(100 + 2);
   });
@@ -400,9 +404,9 @@ describe('chunking a single push notification message with multiple recipients',
   test('99 messages and one additional message with with two recipients', () => {
     const messages = [...new Array(99).fill({ to: '?' }), { to: new Array(2).fill('?') }];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(2);
-    expect(chunks[0].length).toBe(100);
-    expect(chunks[1].length).toBe(1);
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0]).toHaveLength(100);
+    expect(chunks[1]).toHaveLength(1);
     const totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(99 + 2);
   });
@@ -410,21 +414,21 @@ describe('chunking a single push notification message with multiple recipients',
   test('no message', () => {
     const messages: ExpoPushMessage[] = [];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(0);
+    expect(chunks).toHaveLength(0);
   });
 
   test('one message with no recipient', () => {
     const messages = [{ to: [] }];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(0);
+    expect(chunks).toHaveLength(0);
   });
 
   test('two messages and one additional message with no recipient', () => {
     const messages = [...new Array(2).fill({ to: '?' }), { to: [] }];
     const chunks = client.chunkPushNotifications(messages);
-    expect(chunks.length).toBe(1);
+    expect(chunks).toHaveLength(1);
     // The message with no recipient should be removed.
-    expect(chunks[0].length).toBe(2);
+    expect(chunks[0]).toHaveLength(2);
     const totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(2);
   });
