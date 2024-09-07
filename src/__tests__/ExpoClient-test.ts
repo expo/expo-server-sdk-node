@@ -67,7 +67,8 @@ describe('sending push notification messages', () => {
     test('sends requests to the Expo API server with useFcmV1=true', async () => {
       const client = new ExpoClient({ useFcmV1: true });
       await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called(`${sendApiUrl}?useFcmV1=true`)).toBe(true);
+      // Request should omit useFcmV1 if set to true
+      expect((fetch as any).called(`${sendApiUrl}`)).toBe(true);
     });
 
     test('sends requests to the Expo API server with useFcmV1=false', async () => {
