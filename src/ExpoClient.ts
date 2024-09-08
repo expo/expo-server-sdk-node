@@ -6,11 +6,10 @@
  * https://expo.dev
  */
 import assert from 'assert';
-import { Agent } from 'http';
-import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
 import zlib from 'zlib';
+import { Agent, fetch } from 'undici';
 
 import {
   defaultConcurrentRequestLimit,
@@ -205,13 +204,21 @@ export class Expo {
     let requestBody: string | Buffer | undefined;
 
     const sdkVersion = require('../package.json').version;
-    const requestHeaders = new Headers({
+    type RequestHeaders = {
+      Accept: string;
+      'Accept-Encoding': string;
+      'User-Agent': string;
+      Authorization?: string;
+      'Content-Encoding'?: string;
+      'Content-Type'?: string;
+    };
+    const requestHeaders: RequestHeaders = {
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
-    });
+    };
     if (this.accessToken) {
-      requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
+      requestHeaders['Authorization'] = `Bearer ${this.accessToken}`;
     }
 
     if (options.body != null) {
@@ -219,19 +226,19 @@ export class Expo {
       assert(json != null, `JSON request body must not be null`);
       if (options.shouldCompress(json)) {
         requestBody = await gzipAsync(Buffer.from(json));
-        requestHeaders.set('Content-Encoding', 'gzip');
+        requestHeaders['Content-Encoding'] = 'gzip';
       } else {
         requestBody = json;
       }
 
-      requestHeaders.set('Content-Type', 'application/json');
+      requestHeaders['Content-Type'] = 'application/json';
     }
 
     const response = await fetch(url, {
       method: options.httpMethod,
       body: requestBody,
       headers: requestHeaders,
-      agent: this.httpAgent,
+      dispatcher: this.httpAgent,
     });
 
     if (response.status !== 200) {
@@ -257,7 +264,7 @@ export class Expo {
     return result.data;
   }
 
-  private async parseErrorResponseAsync(response: FetchResponse): Promise<Error> {
+  private async parseErrorResponseAsync(response: Response): Promise<Error> {
     const textBody = await response.text();
     let result: ApiResult;
     try {
@@ -275,7 +282,7 @@ export class Expo {
     return this.getErrorFromResult(response, result);
   }
 
-  private async getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
+  private async getTextResponseErrorAsync(response: Response, text: string): Promise<Error> {
     const apiError: ExtensibleError = new Error(
       `Expo responded with an error with status code ${response.status}: ` + text,
     );
@@ -288,7 +295,7 @@ export class Expo {
    * Returns an error for the first API error in the result, with an optional `others` field that
    * contains any other errors.
    */
-  private getErrorFromResult(response: FetchResponse, result: ApiResult): Error {
+  private getErrorFromResult(response: Response, result: ApiResult): Error {
     assert(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
     const [errorData, ...otherErrorData] = result.errors!;
     const error: ExtensibleError = this.getErrorFromResultError(errorData);
