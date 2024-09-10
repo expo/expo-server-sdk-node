@@ -1,18 +1,9 @@
-import { jest, afterEach, beforeEach, describe, test, expect } from '@jest/globals';
+import { afterEach, beforeEach, describe, test, expect } from '@jest/globals';
 import fetch from 'node-fetch';
 import assert from 'node:assert';
 
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
-
-jest.mock('../ExpoClientValues', () => ({
-  requestRetryMinTimeout: 1,
-  pushNotificationChunkLimit: 100,
-  sendApiUrl: 'http://localhost:3000/--/api/v2/push/send',
-  getReceiptsApiUrl: 'http://localhost:3000/--/api/v2/push/getReceipts',
-  pushNotificationReceiptChunkLimit: 300,
-  defaultConcurrentRequestLimit: 6,
-}));
 
 afterEach(() => {
   (fetch as any).reset();

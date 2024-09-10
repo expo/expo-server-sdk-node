@@ -30,4 +30,4 @@ export const defaultConcurrentRequestLimit = 6;
 /**
  * Minimum timeout in ms for request retries.
  */
-export const requestRetryMinTimeout = 1000;
+export const requestRetryMinTimeout = process.env['NODE_ENV'] === 'test' ? 1 : 1000;
