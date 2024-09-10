@@ -8,11 +8,12 @@ jobs:
         node-version: [18, 20, 22]
     steps:
     - uses: actions/checkout@v4
+    - run: corepack enable
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: yarn
-    - run: yarn --frozen-lockfile
+    - run: yarn --immutable
     - run: yarn add -D @types/node@${{ matrix.node-version }}
     - run: yarn tsc
     - run: yarn lint --max-warnings=0
