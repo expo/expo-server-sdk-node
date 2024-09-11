@@ -29,14 +29,14 @@ export class Expo {
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
   private useFcmV1: boolean | undefined;
+  private retryMinTimeout: number;
 
-  constructor(options: ExpoClientOptions = {}) {
+  constructor(options: Partial<ExpoClientOptions> = {}) {
     this.httpAgent = options.httpAgent;
     this.limitConcurrentRequests = promiseLimit(
-      options.maxConcurrentRequests != null
-        ? options.maxConcurrentRequests
-        : defaultConcurrentRequestLimit,
+      options.maxConcurrentRequests ?? defaultConcurrentRequestLimit,
     );
+    this.retryMinTimeout = options.retryMinTimeout ?? requestRetryMinTimeout;
     this.accessToken = options.accessToken;
     this.useFcmV1 = options.useFcmV1;
   }
@@ -93,7 +93,7 @@ export class Expo {
         {
           retries: 2,
           factor: 2,
-          minTimeout: requestRetryMinTimeout,
+          minTimeout: this.retryMinTimeout,
         },
       );
     });
@@ -334,10 +334,11 @@ export class Expo {
 export default Expo;
 
 export type ExpoClientOptions = {
-  httpAgent?: Agent;
-  maxConcurrentRequests?: number;
-  accessToken?: string;
-  useFcmV1?: boolean;
+  httpAgent: Agent;
+  maxConcurrentRequests: number;
+  retryMinTimeout: number;
+  accessToken: string;
+  useFcmV1: boolean;
 };
 
 export type ExpoPushToken = string;
