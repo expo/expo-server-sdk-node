@@ -5,5 +5,5 @@
     "composite": true,
     "noEmit": true
   },
-  "exclude": ["build"]
+  "exclude": ["build", "coverage"]
 }

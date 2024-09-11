@@ -5,5 +5,5 @@
     "outDir": "./build",
     "rootDir": "./src"
   },
-  "exclude": ["node_modules", "**/__mocks__", "**/__tests__", "build"]
+  "exclude": ["node_modules", "**/__mocks__", "**/__tests__", "build", "coverage"]
 }
