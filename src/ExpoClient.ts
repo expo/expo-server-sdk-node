@@ -8,7 +8,7 @@
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
 import assert from 'node:assert';
 import { Agent } from 'node:http';
-import zlib from 'node:zlib';
+import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
 
@@ -218,7 +218,7 @@ export class Expo {
       const json = JSON.stringify(options.body);
       assert(json != null, `JSON request body must not be null`);
       if (options.shouldCompress(json)) {
-        requestBody = await gzipAsync(Buffer.from(json));
+        requestBody = gzipSync(Buffer.from(json));
         requestHeaders.set('Content-Encoding', 'gzip');
       } else {
         requestBody = json;
@@ -332,18 +332,6 @@ export class Expo {
 }
 
 export default Expo;
-
-function gzipAsync(data: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    zlib.gzip(data, (error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
 
 export type ExpoClientOptions = {
   httpAgent?: Agent;
