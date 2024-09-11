@@ -213,7 +213,7 @@ describe('sending push notification messages', () => {
       { repeat: 3 },
     );
 
-    const client = new ExpoClient();
+    const client = new ExpoClient({ retryMinTimeout: 1 });
     const ticketPromise = client.sendPushNotificationsAsync([]);
 
     const rejection = expect(ticketPromise).rejects;
@@ -241,7 +241,7 @@ describe('sending push notification messages', () => {
       )
       .mock(sendApiUrl, { data: mockTickets }, { overwriteRoutes: false });
 
-    const client = new ExpoClient();
+    const client = new ExpoClient({ retryMinTimeout: 1 });
     await expect(client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }])).resolves.toEqual(
       mockTickets,
     );
