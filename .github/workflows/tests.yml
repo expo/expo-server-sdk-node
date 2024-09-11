@@ -17,11 +17,8 @@ jobs:
     - run: yarn tsc
     - run: yarn lint --max-warnings=0
     - run: yarn test --coverage
-    - name: Create coverage report flag
-      id: codecov-flag
-      run: echo "::set-output name=flag::node_${NODE_VERSION/./_}"
-      env:
-        NODE_VERSION: ${{ matrix.node-version }}
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v4
       with:
-        flags: ${{ steps.codecov-flag.outputs.flag }}
+        flags: "node_${{ matrix.node-version }}"
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
