@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, test, expect } from '@jest/globals';
+import sandbox from 'fetch-mock-jest';
 import fetch from 'node-fetch';
 import assert from 'node:assert';
 
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
 
+const fetchMock: ReturnType<typeof sandbox> = fetch; // see src/__mocks__/
+
 afterEach(() => {
-  (fetch as any).reset();
+  fetchMock.reset();
 });
 
 describe('sending push notification messages', () => {
@@ -15,13 +18,13 @@ describe('sending push notification messages', () => {
       { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
       { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
     ];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
+    fetchMock.mock(sendApiUrl, { data: mockTickets });
 
     const client = new ExpoClient();
     const tickets = await client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]);
     expect(tickets).toEqual(mockTickets);
 
-    const [, options] = (fetch as any).lastCall(sendApiUrl);
+    const [, options] = fetchMock.lastCall(sendApiUrl);
     expect(options.headers.get('accept')).toContain('application/json');
     expect(options.headers.get('accept-encoding')).toContain('gzip');
     expect(options.headers.get('content-type')).toContain('application/json');
@@ -34,13 +37,13 @@ describe('sending push notification messages', () => {
       { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
       { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
     ];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
+    fetchMock.mock(sendApiUrl, { data: mockTickets });
 
     const client = new ExpoClient({ accessToken: 'foobar' });
     const tickets = await client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]);
     expect(tickets).toEqual(mockTickets);
 
-    const [, options] = (fetch as any).lastCall(sendApiUrl);
+    const [, options] = fetchMock.lastCall(sendApiUrl);
     expect(options.headers.get('accept')).toContain('application/json');
     expect(options.headers.get('accept-encoding')).toContain('gzip');
     expect(options.headers.get('content-type')).toContain('application/json');
@@ -50,32 +53,32 @@ describe('sending push notification messages', () => {
 
   describe('the useFcmV1 option', () => {
     beforeEach(() => {
-      (fetch as any).any({ data: [{ status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' }] });
+      fetchMock.any({ data: [{ status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' }] });
     });
 
     test('sends requests to the Expo API server without the useFcmV1 parameter', async () => {
       const client = new ExpoClient();
       await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called(sendApiUrl)).toBe(true);
+      expect(fetchMock.called(sendApiUrl)).toBe(true);
     });
 
     test('sends requests to the Expo API server with useFcmV1=true', async () => {
       const client = new ExpoClient({ useFcmV1: true });
       await client.sendPushNotificationsAsync([{ to: 'a' }]);
       // Request should omit useFcmV1 if set to true
-      expect((fetch as any).called(`${sendApiUrl}`)).toBe(true);
+      expect(fetchMock.called(`${sendApiUrl}`)).toBe(true);
     });
 
     test('sends requests to the Expo API server with useFcmV1=false', async () => {
       const client = new ExpoClient({ useFcmV1: false });
       await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called(`${sendApiUrl}?useFcmV1=false`)).toBe(true);
+      expect(fetchMock.called(`${sendApiUrl}?useFcmV1=false`)).toBe(true);
     });
   });
 
   test('compresses request bodies over 1 KiB', async () => {
     const mockTickets = [{ status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' }];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
+    fetchMock.mock(sendApiUrl, { data: mockTickets });
 
     const client = new ExpoClient();
 
@@ -85,7 +88,7 @@ describe('sending push notification messages', () => {
     expect(tickets).toEqual(mockTickets);
 
     // Ensure the request body was compressed
-    const [, options] = (fetch as any).lastCall(sendApiUrl);
+    const [, options] = fetchMock.lastCall(sendApiUrl);
     expect(options.body.length).toBeLessThan(JSON.stringify(messages).length);
     expect(options.headers.get('content-encoding')).toContain('gzip');
   });
@@ -95,7 +98,7 @@ describe('sending push notification messages', () => {
       { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
       { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
     ];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
+    fetchMock.mock(sendApiUrl, { data: mockTickets });
 
     const client = new ExpoClient();
     await expect(client.sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrow(
@@ -108,7 +111,7 @@ describe('sending push notification messages', () => {
   });
 
   test('handles 200 HTTP responses with well-formed API errors', async () => {
-    (fetch as any).mock(sendApiUrl, {
+    fetchMock.mock(sendApiUrl, {
       status: 200,
       errors: [{ code: 'TEST_API_ERROR', message: `This is a test error` }],
     });
@@ -120,7 +123,7 @@ describe('sending push notification messages', () => {
   });
 
   test('handles 200 HTTP responses with malformed JSON', async () => {
-    (fetch as any).mock(sendApiUrl, {
+    fetchMock.mock(sendApiUrl, {
       status: 200,
       body: '<!DOCTYPE html><body>Not JSON</body>',
     });
@@ -132,7 +135,7 @@ describe('sending push notification messages', () => {
   });
 
   test('handles non-200 HTTP responses with well-formed API errors', async () => {
-    (fetch as any).mock(sendApiUrl, {
+    fetchMock.mock(sendApiUrl, {
       status: 400,
       body: {
         errors: [{ code: 'TEST_API_ERROR', message: `This is a test error` }],
@@ -146,7 +149,7 @@ describe('sending push notification messages', () => {
   });
 
   test('handles non-200 HTTP responses with arbitrary JSON', async () => {
-    (fetch as any).mock(sendApiUrl, {
+    fetchMock.mock(sendApiUrl, {
       status: 400,
       body: { clowntown: true },
     });
@@ -158,7 +161,7 @@ describe('sending push notification messages', () => {
   });
 
   test('handles non-200 HTTP responses with arbitrary text', async () => {
-    (fetch as any).mock(sendApiUrl, {
+    fetchMock.mock(sendApiUrl, {
       status: 400,
       body: '<!DOCTYPE html><body>Not JSON</body>',
     });
@@ -170,7 +173,7 @@ describe('sending push notification messages', () => {
   });
 
   test('handles well-formed API responses with multiple errors and extra details', async () => {
-    (fetch as any).mock(sendApiUrl, {
+    fetchMock.mock(sendApiUrl, {
       status: 400,
       body: {
         errors: [
@@ -202,7 +205,7 @@ describe('sending push notification messages', () => {
   });
 
   test('handles 429 Too Many Requests by applying exponential backoff', async () => {
-    (fetch as any).mock(
+    fetchMock.mock(
       sendApiUrl,
       {
         status: 429,
@@ -220,7 +223,7 @@ describe('sending push notification messages', () => {
     await rejection.toThrow(`Rate limit exceeded`);
     await rejection.toMatchObject({ code: 'RATE_LIMIT_ERROR' });
 
-    expect((fetch as any).done()).toBeTruthy();
+    expect(fetchMock.done()).toBeTruthy();
   });
 
   test('handles 429 Too Many Requests and succeeds when a retry succeeds', async () => {
@@ -228,7 +231,7 @@ describe('sending push notification messages', () => {
       { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
       { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
     ];
-    (fetch as any)
+    fetchMock
       .mock(
         sendApiUrl,
         {
@@ -246,7 +249,7 @@ describe('sending push notification messages', () => {
       mockTickets,
     );
 
-    expect((fetch as any).done()).toBeTruthy();
+    expect(fetchMock.done()).toBeTruthy();
   });
 });
 
@@ -256,7 +259,7 @@ describe('retrieving push notification receipts', () => {
       'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX': { status: 'ok' },
       'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY': { status: 'ok' },
     };
-    (fetch as any).mock(getReceiptsApiUrl, { data: mockReceipts });
+    fetchMock.mock(getReceiptsApiUrl, { data: mockReceipts });
 
     const client = new ExpoClient();
     const receipts = await client.getPushNotificationReceiptsAsync([
@@ -265,7 +268,7 @@ describe('retrieving push notification receipts', () => {
     ]);
     expect(receipts).toEqual(mockReceipts);
 
-    const [, options] = (fetch as any).lastCall(getReceiptsApiUrl);
+    const [, options] = fetchMock.lastCall(getReceiptsApiUrl);
     expect(options.headers.get('accept')).toContain('application/json');
     expect(options.headers.get('accept-encoding')).toContain('gzip');
     expect(options.headers.get('content-type')).toContain('application/json');
@@ -273,7 +276,7 @@ describe('retrieving push notification receipts', () => {
 
   test('throws an error if the response is not a map', async () => {
     const mockReceipts = [{ status: 'ok' }];
-    (fetch as any).mock(getReceiptsApiUrl, { data: mockReceipts });
+    fetchMock.mock(getReceiptsApiUrl, { data: mockReceipts });
 
     const client = new ExpoClient();
     const rejection = expect(

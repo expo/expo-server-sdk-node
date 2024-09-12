@@ -2743,7 +2743,7 @@ __metadata:
     "@types/promise-retry": "npm:^1.1.6"
     eslint: "npm:^8.57.0"
     eslint-config-universe: "npm:^12.0.0"
-    fetch-mock: "npm:^9.11.0"
+    fetch-mock-jest: "npm:^1.5.1"
     jest: "npm:^29.7.0"
     node-fetch: "npm:^2.6.0"
     prettier: "npm:^3.2.5"
@@ -2817,6 +2817,20 @@ __metadata:
   dependencies:
     bser: "npm:2.1.1"
   checksum: 10c0/feae89ac148adb8f6ae8ccd87632e62b13563e6fb114cacb5265c51f585b17e2e268084519fb2edd133872f1d47a18e6bfd7e5e08625c0d41b93149694187581
+  languageName: node
+  linkType: hard
+
+"fetch-mock-jest@npm:^1.5.1":
+  version: 1.5.1
+  resolution: "fetch-mock-jest@npm:1.5.1"
+  dependencies:
+    fetch-mock: "npm:^9.11.0"
+  peerDependencies:
+    node-fetch: "*"
+  peerDependenciesMeta:
+    node-fetch:
+      optional: true
+  checksum: 10c0/d1cd2a1e139868567280f2e8145ed4f55acb186b52fb94397ce06d2887ff8f41e9484bada2f842f9efa2e51207b6f6d61b1ec02d68e72758f53e74e3e5351129
   languageName: node
   linkType: hard
 

@@ -1,1 +1,1 @@
-module.exports = require('fetch-mock').sandbox();
+module.exports = require('fetch-mock-jest').sandbox();
