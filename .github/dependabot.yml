@@ -14,6 +14,7 @@ updates:
     - dependency-type: "development"
   ignore:
     - dependency-name: "@types*"
+    - dependency-name: eslint # v9 breaks our shared config
   groups:
     jest:
       patterns:
