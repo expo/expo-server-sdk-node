@@ -1,286 +1,298 @@
-import { afterEach, beforeEach, describe, test, expect } from '@jest/globals';
-import fetch from 'node-fetch';
+import { jest, afterEach, beforeEach, describe, test, expect } from '@jest/globals';
+import fetch, { Headers, Response } from 'node-fetch';
 import assert from 'node:assert';
+import { gzipSync } from 'node:zlib';
 
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
 
+jest.mock('node-fetch', () => {
+  const actualFetch = jest.requireActual<typeof import('node-fetch')>('node-fetch');
+  return {
+    __esModule: true,
+    ...actualFetch,
+    default: jest.fn(), // the fetch function
+  };
+});
+
+const mockedFetch = jest.mocked(fetch);
+
 afterEach(() => {
-  (fetch as any).reset();
+  jest.clearAllMocks();
 });
 
 describe('sending push notification messages', () => {
-  test('sends requests to the Expo API server without a supplied access token', async () => {
-    const mockTickets = [
-      { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
-      { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
-    ];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
+  test('sends requests to the correct url', async () => {
+    try {
+      await client().sendPushNotificationsAsync([]);
+    } catch {}
 
-    const client = new ExpoClient();
-    const tickets = await client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]);
-    expect(tickets).toEqual(mockTickets);
-
-    const [, options] = (fetch as any).lastCall(sendApiUrl);
-    expect(options.headers.get('accept')).toContain('application/json');
-    expect(options.headers.get('accept-encoding')).toContain('gzip');
-    expect(options.headers.get('content-type')).toContain('application/json');
-    expect(options.headers.get('user-agent')).toMatch(/^expo-server-sdk-node\//);
-    expect(options.headers.get('Authorization')).toBeNull();
+    expect(mockedFetch).toHaveBeenLastCalledWith(sendApiUrl, expect.anything());
   });
 
-  test('sends requests to the Expo API server with a supplied access token', async () => {
-    const mockTickets = [
-      { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
-      { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
-    ];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
+  test('sets a user-agent header on the request', async () => {
+    try {
+      await client().sendPushNotificationsAsync([]);
+    } catch {}
 
-    const client = new ExpoClient({ accessToken: 'foobar' });
-    const tickets = await client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]);
-    expect(tickets).toEqual(mockTickets);
+    expect(headerOnLastCall('user-agent')).toMatch(/^expo-server-sdk-node\//);
+  });
 
-    const [, options] = (fetch as any).lastCall(sendApiUrl);
-    expect(options.headers.get('accept')).toContain('application/json');
-    expect(options.headers.get('accept-encoding')).toContain('gzip');
-    expect(options.headers.get('content-type')).toContain('application/json');
-    expect(options.headers.get('user-agent')).toMatch(/^expo-server-sdk-node\//);
-    expect(options.headers.get('Authorization')).toContain('Bearer foobar');
+  test.each([
+    { header: 'accept', expected: 'application/json' },
+    { header: 'accept-encoding', expected: 'gzip' },
+    { header: 'content-type', expected: 'application/json' },
+  ])('sets the header $header=$expected on the request', async ({ header, expected }) => {
+    try {
+      await client().sendPushNotificationsAsync([]);
+    } catch {}
+
+    expect(headerOnLastCall(header)).toContain(expected);
+  });
+
+  test('does not set the authorization header by default', async () => {
+    try {
+      await client().sendPushNotificationsAsync([]);
+    } catch {}
+
+    expect(headerOnLastCall('Authorization')).toBeNull();
+  });
+
+  test('resolves with the data from the server response', () => {
+    const data = ["here's one", "here's a second one"];
+    mockFetchResponse({ data });
+
+    return expect(
+      client().sendPushNotificationsAsync([{ to: 'one' }, { to: 'another' }]),
+    ).resolves.toEqual(data);
+  });
+
+  test('sets the Authorization header to any supplied access token', async () => {
+    const accessToken = 'foobar';
+
+    try {
+      await client({ accessToken }).sendPushNotificationsAsync([]);
+    } catch {}
+
+    expect(headerOnLastCall('Authorization')).toContain(`Bearer ${accessToken}`);
   });
 
   describe('the useFcmV1 option', () => {
-    beforeEach(() => {
-      (fetch as any).any({ data: [{ status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' }] });
+    test('omits the parameter when set to true', async () => {
+      try {
+        await client({ useFcmV1: true }).sendPushNotificationsAsync([]);
+      } catch {}
+
+      expect(mockedFetch).toHaveBeenCalledWith(sendApiUrl, expect.anything());
     });
 
-    test('sends requests to the Expo API server without the useFcmV1 parameter', async () => {
-      const client = new ExpoClient();
-      await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called(sendApiUrl)).toBe(true);
-    });
+    test('includes the parameter when set to false', async () => {
+      try {
+        await client({ useFcmV1: false }).sendPushNotificationsAsync([]);
+      } catch {}
 
-    test('sends requests to the Expo API server with useFcmV1=true', async () => {
-      const client = new ExpoClient({ useFcmV1: true });
-      await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      // Request should omit useFcmV1 if set to true
-      expect((fetch as any).called(`${sendApiUrl}`)).toBe(true);
-    });
-
-    test('sends requests to the Expo API server with useFcmV1=false', async () => {
-      const client = new ExpoClient({ useFcmV1: false });
-      await client.sendPushNotificationsAsync([{ to: 'a' }]);
-      expect((fetch as any).called(`${sendApiUrl}?useFcmV1=false`)).toBe(true);
+      expect(mockedFetch).toHaveBeenCalledWith(`${sendApiUrl}?useFcmV1=false`, expect.anything());
     });
   });
 
   test('compresses request bodies over 1 KiB', async () => {
-    const mockTickets = [{ status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' }];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
-
-    const client = new ExpoClient();
-
     const messages = [{ to: 'a', body: new Array(1500).join('?') }];
-    expect(JSON.stringify(messages).length).toBeGreaterThan(1024);
-    const tickets = await client.sendPushNotificationsAsync(messages);
-    expect(tickets).toEqual(mockTickets);
+    const messageLength = JSON.stringify(messages).length;
+    expect(messageLength).toBeGreaterThan(1024);
 
-    // Ensure the request body was compressed
-    const [, options] = (fetch as any).lastCall(sendApiUrl);
-    expect(options.body.length).toBeLessThan(JSON.stringify(messages).length);
-    expect(options.headers.get('content-encoding')).toContain('gzip');
+    try {
+      await client().sendPushNotificationsAsync(messages);
+    } catch {}
+
+    expect(mockedFetch).toHaveBeenLastCalledWith(
+      sendApiUrl,
+      expect.objectContaining({
+        body: gzipSync(Buffer.from(JSON.stringify(messages))),
+      }),
+    );
+    expect(headerOnLastCall('content-encoding')).toContain('gzip');
   });
 
   test(`throws an error when the number of tickets doesn't match the number of messages`, async () => {
-    const mockTickets = [
-      { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
-      { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
-    ];
-    (fetch as any).mock(sendApiUrl, { data: mockTickets });
+    const data = new Array(2);
 
-    const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrow(
+    mockFetchResponse({ data });
+
+    await expect(client().sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrow(
       `Expected Expo to respond with 1 ticket but got 2`,
     );
 
-    await expect(
-      client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }, { to: 'c' }]),
-    ).rejects.toThrow(`Expected Expo to respond with 3 tickets but got 2`);
+    mockFetchResponse({ data });
+
+    await expect(client().sendPushNotificationsAsync(Array(3).fill({ to: 'a' }))).rejects.toThrow(
+      `Expected Expo to respond with 3 tickets but got 2`,
+    );
   });
 
-  test('handles 200 HTTP responses with well-formed API errors', async () => {
-    (fetch as any).mock(sendApiUrl, {
-      status: 200,
-      errors: [{ code: 'TEST_API_ERROR', message: `This is a test error` }],
+  describe('200 response with well-formed API errors', () => {
+    const code = 'TEST_API_ERROR';
+    const message = 'This is a test error';
+    beforeEach(() => {
+      mockFetchResponse({ errors: [{ code, message }] });
     });
-
-    const client = new ExpoClient();
-    const rejection = expect(client.sendPushNotificationsAsync([])).rejects;
-    await rejection.toThrow(`This is a test error`);
-    await rejection.toMatchObject({ code: 'TEST_API_ERROR' });
+    test('rejects with the error message', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message));
+    test('rejects with the error code', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code }));
   });
 
   test('handles 200 HTTP responses with malformed JSON', async () => {
-    (fetch as any).mock(sendApiUrl, {
-      status: 200,
-      body: '<!DOCTYPE html><body>Not JSON</body>',
-    });
+    mockedFetch.mockResolvedValue(new Response('<!DOCTYPE html><body>Not JSON</body>'));
 
-    const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([])).rejects.toThrow(
+    await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
 
-  test('handles non-200 HTTP responses with well-formed API errors', async () => {
-    (fetch as any).mock(sendApiUrl, {
-      status: 400,
-      body: {
-        errors: [{ code: 'TEST_API_ERROR', message: `This is a test error` }],
-      },
+  describe('non-200 response with well-formed API errors', () => {
+    const code = 'TEST_API_ERROR';
+    const message = 'This is a test error';
+    beforeEach(() => {
+      mockFetchResponse({ errors: [{ code, message }] }, 400);
     });
-
-    const client = new ExpoClient();
-    const rejection = expect(client.sendPushNotificationsAsync([])).rejects;
-    await rejection.toThrow(`This is a test error`);
-    await rejection.toMatchObject({ code: 'TEST_API_ERROR' });
+    test('rejects with the error message', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message));
+    test('rejects with the error code', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code }));
   });
 
-  test('handles non-200 HTTP responses with arbitrary JSON', async () => {
-    (fetch as any).mock(sendApiUrl, {
-      status: 400,
-      body: { clowntown: true },
-    });
+  test('handles non-200 HTTP responses with arbitrary JSON', () => {
+    mockFetchResponse({ clowntown: true }, 400);
 
-    const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([])).rejects.toThrow(
+    return expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
 
-  test('handles non-200 HTTP responses with arbitrary text', async () => {
-    (fetch as any).mock(sendApiUrl, {
-      status: 400,
-      body: '<!DOCTYPE html><body>Not JSON</body>',
-    });
+  test('handles non-200 HTTP responses with arbitrary text', () => {
+    mockedFetch.mockResolvedValue(
+      new Response('<!DOCTYPE html><body>Not JSON</body>', {
+        status: 400,
+      }),
+    );
 
-    const client = new ExpoClient();
-    await expect(client.sendPushNotificationsAsync([])).rejects.toThrow(
+    return expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
 
-  test('handles well-formed API responses with multiple errors and extra details', async () => {
-    (fetch as any).mock(sendApiUrl, {
-      status: 400,
-      body: {
-        errors: [
-          {
-            code: 'TEST_API_ERROR',
-            message: `This is a test error`,
-            details: { __debug: 'test debug information' },
-            stack:
-              'Error: This is a test error\n' +
-              '    at SomeServerModule.method (SomeServerModule.js:131:20)',
-          },
-          {
-            code: 'SYSTEM_ERROR',
-            message: `This is another error`,
-          },
-        ],
-      },
-    });
-
-    const client = new ExpoClient();
-    const rejection = expect(client.sendPushNotificationsAsync([])).rejects;
-    await rejection.toThrow(`This is a test error`);
-    await rejection.toMatchObject({
-      code: 'TEST_API_ERROR',
-      details: { __debug: 'test debug information' },
-      serverStack: expect.any(String),
-      others: expect.arrayContaining([expect.any(Error)]),
-    });
-  });
-
-  test('handles 429 Too Many Requests by applying exponential backoff', async () => {
-    (fetch as any).mock(
-      sendApiUrl,
+  describe('well-formed API responses with multiple errors and extra details', () => {
+    const errors = [
       {
-        status: 429,
-        body: {
-          errors: [{ code: 'RATE_LIMIT_ERROR', message: `Rate limit exceeded` }],
-        },
+        code: 'TEST_API_ERROR',
+        message: `This is a test error`,
+        details: { __debug: 'test debug information' },
+        stack:
+          'Error: This is a test error\n' +
+          '    at SomeServerModule.method (SomeServerModule.js:131:20)',
       },
-      { repeat: 3 },
-    );
+      {
+        code: 'SYSTEM_ERROR',
+        message: `This is another error`,
+      },
+    ];
+    beforeEach(() => mockFetchResponse({ errors }, 400));
 
-    const client = new ExpoClient({ retryMinTimeout: 1 });
-    const ticketPromise = client.sendPushNotificationsAsync([]);
+    test("throws the first error's message", () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toThrow(errors[0]?.message));
 
-    const rejection = expect(ticketPromise).rejects;
-    await rejection.toThrow(`Rate limit exceeded`);
-    await rejection.toMatchObject({ code: 'RATE_LIMIT_ERROR' });
+    test('rejects with the code of the first error', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+        code: errors[0]?.code,
+      }));
 
-    expect((fetch as any).done()).toBeTruthy();
+    test('rejects with the details of the first error', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+        details: errors[0]?.details,
+      }));
+
+    test('rejects with the stack of the the first error as "serverStack"', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+        serverStack: errors[0]?.stack,
+      }));
+
+    test('rejects with additional errors messages as "others"', () =>
+      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+        others: [Error(errors[1]?.message)],
+      }));
   });
 
-  test('handles 429 Too Many Requests and succeeds when a retry succeeds', async () => {
-    const mockTickets = [
-      { status: 'ok', id: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' },
-      { status: 'ok', id: 'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY' },
-    ];
-    (fetch as any)
-      .mock(
-        sendApiUrl,
-        {
-          status: 429,
-          body: {
-            errors: [{ code: 'RATE_LIMIT_ERROR', message: `Rate limit exceeded` }],
-          },
-        },
-        { repeat: 2 },
-      )
-      .mock(sendApiUrl, { data: mockTickets }, { overwriteRoutes: false });
+  describe('429 Too Many Requests', () => {
+    const code = 'RATE_LIMIT_ERROR';
+    const message = 'Rate limit exceeded';
+    const errors = [{ code, message }];
+    const fastClient = client({ retryMinTimeout: 1 });
 
-    const client = new ExpoClient({ retryMinTimeout: 1 });
-    await expect(client.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }])).resolves.toEqual(
-      mockTickets,
-    );
+    describe('when all retries fail', () => {
+      beforeEach(() => {
+        mockFetchResponse({ errors }, 429);
+        mockFetchResponse({ errors }, 429);
+        mockFetchResponse({ errors }, 429);
+      });
 
-    expect((fetch as any).done()).toBeTruthy();
+      test('rejects with the error message', () =>
+        expect(fastClient.sendPushNotificationsAsync([])).rejects.toThrow(message));
+
+      test('rejects with the error code', () =>
+        expect(fastClient.sendPushNotificationsAsync([])).rejects.toMatchObject({ code }));
+    });
+    describe('when the second retry succeeds', () => {
+      const data = ['one', 'another'];
+      beforeEach(() => {
+        mockFetchResponse({ errors }, 429);
+        mockFetchResponse({ errors }, 429);
+        mockFetchResponse({ data });
+      });
+      test('resolves with the data response', () =>
+        expect(fastClient.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }])).resolves.toEqual(
+          data,
+        ));
+    });
   });
 });
 
 describe('retrieving push notification receipts', () => {
-  test('gets receipts from the Expo API server', async () => {
-    const mockReceipts = {
-      'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX': { status: 'ok' },
-      'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY': { status: 'ok' },
-    };
-    (fetch as any).mock(getReceiptsApiUrl, { data: mockReceipts });
+  test('sends requests to the correct url', async () => {
+    try {
+      await client().getPushNotificationReceiptsAsync([]);
+    } catch {}
 
-    const client = new ExpoClient();
-    const receipts = await client.getPushNotificationReceiptsAsync([
-      'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
-      'YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY',
-    ]);
-    expect(receipts).toEqual(mockReceipts);
-
-    const [, options] = (fetch as any).lastCall(getReceiptsApiUrl);
-    expect(options.headers.get('accept')).toContain('application/json');
-    expect(options.headers.get('accept-encoding')).toContain('gzip');
-    expect(options.headers.get('content-type')).toContain('application/json');
+    expect(mockedFetch).toHaveBeenLastCalledWith(getReceiptsApiUrl, expect.anything());
   });
 
-  test('throws an error if the response is not a map', async () => {
-    const mockReceipts = [{ status: 'ok' }];
-    (fetch as any).mock(getReceiptsApiUrl, { data: mockReceipts });
+  test.each([
+    { header: 'accept', expected: 'application/json' },
+    { header: 'accept-encoding', expected: 'gzip' },
+    { header: 'content-type', expected: 'application/json' },
+  ])('sets the header $header=$expected on the request', async ({ header, expected }) => {
+    try {
+      await client().getPushNotificationReceiptsAsync([]);
+    } catch {}
 
-    const client = new ExpoClient();
-    const rejection = expect(
-      client.getPushNotificationReceiptsAsync(['XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX']),
-    ).rejects;
-    await rejection.toThrow(`Expected Expo to respond with a map`);
-    await rejection.toMatchObject({ data: mockReceipts });
+    expect(headerOnLastCall(header)).toContain(expected);
+  });
+
+  test('resolves with the data response from the Expo API server', () => {
+    const data = { foo: 'bar' };
+    mockFetchResponse({ data });
+
+    return expect(client().getPushNotificationReceiptsAsync([])).resolves.toEqual(data);
+  });
+
+  describe('if the response is not a map', () => {
+    const data = [{ status: 'ok' }];
+    beforeEach(() => mockFetchResponse({ data }));
+    test('throws an error', () =>
+      expect(client().getPushNotificationReceiptsAsync([])).rejects.toThrow(
+        `Expected Expo to respond with a map`,
+      ));
+    test('rejects with the response', () =>
+      expect(client().getPushNotificationReceiptsAsync([])).rejects.toMatchObject({ data }));
   });
 });
 
@@ -290,9 +302,8 @@ describe('chunking push notification messages', () => {
   });
 
   test('chunks lists of push notification messages', () => {
-    const client = new ExpoClient();
     const messages = new Array(999).fill({ to: '?' });
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     let totalMessageCount = 0;
     for (const chunk of chunks) {
       totalMessageCount += chunk.length;
@@ -301,9 +312,8 @@ describe('chunking push notification messages', () => {
   });
 
   test('can chunk small lists of push notification messages', () => {
-    const client = new ExpoClient();
     const messages = new Array(10).fill({ to: '?' });
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(1);
     expect(chunks[0]).toHaveLength(10);
   });
@@ -311,9 +321,8 @@ describe('chunking push notification messages', () => {
   test('chunks single push notification message with lists of recipients', () => {
     const messagesLength = 999;
 
-    const client = new ExpoClient();
     const messages = [{ to: new Array(messagesLength).fill('?') }];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     for (const chunk of chunks) {
       // Each chunk should only contain a single message with 100 recipients
       expect(chunk).toHaveLength(1);
@@ -325,9 +334,8 @@ describe('chunking push notification messages', () => {
   test('can chunk single push notification message with small lists of recipients', () => {
     const messagesLength = 10;
 
-    const client = new ExpoClient();
     const messages = [{ to: new Array(messagesLength).fill('?') }];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(1);
     expect(chunks[0]).toHaveLength(1);
     assert.ok(chunks[0]);
@@ -335,7 +343,6 @@ describe('chunking push notification messages', () => {
   });
 
   test('chunks push notification messages mixed with lists of recipients and single recipient', () => {
-    const client = new ExpoClient();
     const messages = [
       { to: new Array(888).fill('?') },
       ...new Array(999).fill({
@@ -344,18 +351,16 @@ describe('chunking push notification messages', () => {
       { to: new Array(90).fill('?') },
       ...new Array(10).fill({ to: '?' }),
     ];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     const totalMessageCount = countAndValidateMessages(chunks);
     expect(totalMessageCount).toBe(888 + 999 + 90 + 10);
   });
 });
 
 describe('chunking a single push notification message with multiple recipients', () => {
-  const client = new ExpoClient();
-
   test('one message with 100 recipients', () => {
     const messages = [{ to: new Array(100).fill('?') }];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(1);
     expect(chunks[0]).toHaveLength(1);
     assert.ok(chunks[0]);
@@ -364,7 +369,7 @@ describe('chunking a single push notification message with multiple recipients',
 
   test('one message with 101 recipients', () => {
     const messages = [{ to: new Array(101).fill('?') }];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(2);
     expect(chunks[0]).toHaveLength(1);
     expect(chunks[1]).toHaveLength(1);
@@ -374,7 +379,7 @@ describe('chunking a single push notification message with multiple recipients',
 
   test('one message with 99 recipients and two additional messages', () => {
     const messages = [{ to: new Array(99).fill('?') }, ...new Array(2).fill({ to: '?' })];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(2);
     expect(chunks[0]).toHaveLength(2);
     expect(chunks[1]).toHaveLength(1);
@@ -384,7 +389,7 @@ describe('chunking a single push notification message with multiple recipients',
 
   test('one message with 100 recipients and two additional messages', () => {
     const messages = [{ to: new Array(100).fill('?') }, ...new Array(2).fill({ to: '?' })];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(2);
     expect(chunks[0]).toHaveLength(1);
     expect(chunks[1]).toHaveLength(2);
@@ -394,7 +399,7 @@ describe('chunking a single push notification message with multiple recipients',
 
   test('99 messages and one additional message with with two recipients', () => {
     const messages = [...new Array(99).fill({ to: '?' }), { to: new Array(2).fill('?') }];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(2);
     expect(chunks[0]).toHaveLength(100);
     expect(chunks[1]).toHaveLength(1);
@@ -403,20 +408,16 @@ describe('chunking a single push notification message with multiple recipients',
   });
 
   test('no message', () => {
-    const messages: ExpoPushMessage[] = [];
-    const chunks = client.chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(0);
+    expect(client().chunkPushNotifications([])).toHaveLength(0);
   });
 
   test('one message with no recipient', () => {
-    const messages = [{ to: [] }];
-    const chunks = client.chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(0);
+    expect(client().chunkPushNotifications([{ to: [] }])).toHaveLength(0);
   });
 
   test('two messages and one additional message with no recipient', () => {
     const messages = [...new Array(2).fill({ to: '?' }), { to: [] }];
-    const chunks = client.chunkPushNotifications(messages);
+    const chunks = client().chunkPushNotifications(messages);
     expect(chunks).toHaveLength(1);
     // The message with no recipient should be removed.
     expect(chunks[0]).toHaveLength(2);
@@ -442,22 +443,30 @@ describe('chunking push notification receipt IDs', () => {
   });
 });
 
-test('can detect an Expo push token', () => {
-  expect(ExpoClient.isExpoPushToken('ExpoPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
-  expect(ExpoClient.isExpoPushToken('ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
-
-  expect(ExpoClient.isExpoPushToken('F5741A13-BCDA-434B-A316-5DC0E6FFA94F')).toBe(true);
-
-  // FCM
-  expect(
-    ExpoClient.isExpoPushToken(
-      'dOKpuo4qbsM:APA91bHkSmF84ROx7Y-2eMGxc0lmpQeN33ZwDMG763dkjd8yjKK-rhPtiR1OoIWNG5ZshlL8oyxsTnQ5XtahyBNS9mJAvfeE6aHzv_mOF_Ve4vL2po4clMIYYV2-Iea_sZVJF7xFLXih4Y0y88JNYULxFfz-XXXXX',
-    ),
-  ).toBe(false);
-  // APNs
-  expect(
-    ExpoClient.isExpoPushToken('5fa729c6e535eb568g18fdabd35785fc60f41c161d9d7cf4b0bbb0d92437fda0'),
-  ).toBe(false);
+describe('.isExpoPushToken', () => {
+  test('returns true for ExpoPushToken[.*]', () => {
+    expect(ExpoClient.isExpoPushToken('ExpoPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
+  });
+  test('returns true for ExponentPushToken[.*]', () => {
+    expect(ExpoClient.isExpoPushToken('ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
+  });
+  test('returns true for UUIDs', () => {
+    expect(ExpoClient.isExpoPushToken('F5741A13-BCDA-434B-A316-5DC0E6FFA94F')).toBe(true);
+  });
+  test('returns false for FCM tokens', () => {
+    expect(
+      ExpoClient.isExpoPushToken(
+        'dOKpuo4qbsM:APA91bHkSmF84ROx7Y-2eMGxc0lmpQeN33ZwDMG763dkjd8yjKK-rhPtiR1OoIWNG5ZshlL8oyxsTnQ5XtahyBNS9mJAvfeE6aHzv_mOF_Ve4vL2po4clMIYYV2-Iea_sZVJF7xFLXih4Y0y88JNYULxFfz-XXXXX',
+      ),
+    ).toBe(false);
+  });
+  test('returns false for APNS tokens', () => {
+    expect(
+      ExpoClient.isExpoPushToken(
+        '5fa729c6e535eb568g18fdabd35785fc60f41c161d9d7cf4b0bbb0d92437fda0',
+      ),
+    ).toBe(false);
+  });
 });
 
 function countAndValidateMessages(chunks: ExpoPushMessage[][]): number {
@@ -468,4 +477,24 @@ function countAndValidateMessages(chunks: ExpoPushMessage[][]): number {
     totalMessageCount += chunkMessagesCount;
   }
   return totalMessageCount;
+}
+
+function mockFetchResponse(body: object, status: number = 200) {
+  // Response objects can only be used one time, so each mock call should
+  // create a new one, hence the "Once."
+  mockedFetch.mockResolvedValueOnce(new Response(JSON.stringify(body), { status }));
+}
+
+function client(options: object = {}) {
+  return new ExpoClient(options);
+}
+
+function headerOnLastCall(header: string): string | null {
+  expect(mockedFetch).toHaveBeenCalled();
+  const { lastCall } = mockedFetch.mock;
+  assert(Array.isArray(lastCall));
+  const [, options] = lastCall;
+  assert.ok(options); // we always call `fetch` with two arguments
+  assert(options.headers instanceof Headers);
+  return options.headers.get(header);
 }
