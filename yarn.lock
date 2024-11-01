@@ -925,10 +925,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node-lts@npm:^20.1.3":
-  version: 20.1.3
-  resolution: "@tsconfig/node-lts@npm:20.1.3"
-  checksum: 10c0/60a43989c6cd8677c70f22f0cf5455e01a7299cf9ebe6f1158a41506080fe8bacbe01a8d948ec71a83142bb43290485dc89a29ce620056757ba3b9062c50537a
+"@tsconfig/node-lts@npm:^22.0.0":
+  version: 22.0.0
+  resolution: "@tsconfig/node-lts@npm:22.0.0"
+  checksum: 10c0/0682da4092b9c62d88a09ed93e2c051c62f4e054eb34f419e8276956aacf279e1d638efde0e6a416615bf0a0e05c6a66db0bedba991f6efeb9eb91a35d360cb6
   languageName: node
   linkType: hard
 
@@ -2718,7 +2718,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "expo-server-sdk@workspace:."
   dependencies:
-    "@tsconfig/node-lts": "npm:^20.1.3"
+    "@tsconfig/node-lts": "npm:^22.0.0"
     "@tsconfig/strictest": "npm:^2.0.5"
     "@types/node-fetch": "npm:^2.6.11"
     "@types/promise-retry": "npm:^1.1.6"
