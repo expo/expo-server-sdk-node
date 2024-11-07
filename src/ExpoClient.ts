@@ -343,9 +343,10 @@ export type ExpoClientOptions = {
 
 export type ExpoPushToken = string;
 
+// see "Message request format" at https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
 export type ExpoPushMessage = {
   to: ExpoPushToken | ExpoPushToken[];
-  data?: object;
+  data?: Record<string, unknown>;
   title?: string;
   subtitle?: string;
   body?: string;
@@ -364,6 +365,7 @@ export type ExpoPushMessage = {
   channelId?: string;
   categoryId?: string;
   mutableContent?: boolean;
+  _contentAvailable?: boolean;
 };
 
 export type ExpoPushReceiptId = string;
