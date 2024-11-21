@@ -361,6 +361,7 @@ export type ExpoPushMessage = {
   ttl?: number;
   expiration?: number;
   priority?: 'default' | 'normal' | 'high';
+  interruptionLevel?: 'active' | 'critical' | 'passive' | 'time-sensitive';
   badge?: number;
   channelId?: string;
   categoryId?: string;
