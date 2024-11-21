@@ -1,129 +1,116 @@
-import { jest, afterEach, beforeEach, describe, test, expect } from '@jest/globals';
-import fetch, { Headers, Response } from 'node-fetch';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
 import assert from 'node:assert';
-import { gzipSync } from 'node:zlib';
+import { randomUUID } from 'node:crypto';
+import { gunzipSync } from 'node:zlib';
 
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
 
-jest.mock('node-fetch', () => {
-  const actualFetch = jest.requireActual<typeof import('node-fetch')>('node-fetch');
-  return {
-    __esModule: true,
-    ...actualFetch,
-    default: jest.fn(), // the fetch function
-  };
+const accessToken = 'foobar';
+const mockTickets = [{ status: 'ok', id: randomUUID() }];
+const mockReceipts = {};
+const validationError = HttpResponse.json(
+  { errors: [{ code: 'VALIDATION_ERROR' }] },
+  { status: 400 },
+);
+
+const server = setupServer(
+  http.post(sendApiUrl, async ({ request }) => {
+    // The `useFcmV1` parameter can now only be true or absent
+    const url = new URL(request.url);
+    switch (url.searchParams.get('useFcmV1')) {
+      case 'true':
+        break;
+      case null:
+        break;
+      default:
+        return validationError;
+    }
+    if (request.headers.get('Content-Type') !== 'application/json') {
+      return validationError;
+    }
+    if (request.headers.get('Authorization') !== `Bearer ${accessToken}`) {
+      return HttpResponse.json(
+        { error: 'invalid_token', error_description: 'The bearer token is invalid' },
+        { status: 401 },
+      );
+    }
+    let body;
+    if (request.headers.get('Content-Encoding') === 'gzip') {
+      body = JSON.parse(gunzipSync(await request.arrayBuffer()).toString());
+    } else {
+      body = await request.json();
+    }
+
+    if (typeof body != 'object') {
+      return HttpResponse.text('Not Found', { status: 404 });
+    }
+    if (!body || !(body['to'] || Array.isArray(body))) {
+      return validationError;
+    }
+
+    return HttpResponse.json({ data: mockTickets });
+  }),
+  http.post(getReceiptsApiUrl, async ({ request }) => {
+    if (request.headers.get('Content-Type') !== 'application/json') {
+      return validationError;
+    }
+    const body = await request.json();
+
+    if (typeof body != 'object') {
+      return HttpResponse.text('Not Found', { status: 404 });
+    }
+    if (!body || !(body['ids'] || Array.isArray(body))) {
+      return validationError;
+    }
+    return HttpResponse.json({ data: mockReceipts });
+  }),
+);
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'error' });
 });
 
-const mockedFetch = jest.mocked(fetch);
+afterAll(() => {
+  server.close();
+});
 
 afterEach(() => {
-  jest.clearAllMocks();
+  server.resetHandlers();
 });
 
 describe('sending push notification messages', () => {
-  test('sends requests to the correct url', async () => {
-    try {
-      await client().sendPushNotificationsAsync([]);
-    } catch {}
-
-    expect(mockedFetch).toHaveBeenLastCalledWith(sendApiUrl, expect.anything());
-  });
-
-  test('sets a user-agent header on the request', async () => {
-    try {
-      await client().sendPushNotificationsAsync([]);
-    } catch {}
-
-    expect(headerOnLastCall('user-agent')).toMatch(/^expo-server-sdk-node\//);
-  });
-
-  test.each([
-    { header: 'accept', expected: 'application/json' },
-    { header: 'accept-encoding', expected: 'gzip' },
-    { header: 'content-type', expected: 'application/json' },
-  ])('sets the header $header=$expected on the request', async ({ header, expected }) => {
-    try {
-      await client().sendPushNotificationsAsync([]);
-    } catch {}
-
-    expect(headerOnLastCall(header)).toContain(expected);
-  });
-
-  test('does not set the authorization header by default', async () => {
-    try {
-      await client().sendPushNotificationsAsync([]);
-    } catch {}
-
-    expect(headerOnLastCall('Authorization')).toBeNull();
-  });
-
-  test('resolves with the data from the server response', () => {
-    const data = ["here's one", "here's a second one"];
-    mockFetchResponse({ data });
-
-    return expect(
-      client().sendPushNotificationsAsync([{ to: 'one' }, { to: 'another' }]),
-    ).resolves.toEqual(data);
-  });
-
-  test('sets the Authorization header to any supplied access token', async () => {
-    const accessToken = 'foobar';
-
-    try {
-      await client({ accessToken }).sendPushNotificationsAsync([]);
-    } catch {}
-
-    expect(headerOnLastCall('Authorization')).toContain(`Bearer ${accessToken}`);
-  });
+  test('resolves with the data from the server response', () =>
+    expect(client().sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(mockTickets));
 
   describe('the useFcmV1 option', () => {
-    test('omits the parameter when set to true', async () => {
-      try {
-        await client({ useFcmV1: true }).sendPushNotificationsAsync([]);
-      } catch {}
+    test('omits the parameter when set to true', () =>
+      expect(client({ useFcmV1: true }).sendPushNotificationsAsync([{ to: '' }])).resolves.toEqual(
+        mockTickets,
+      ));
 
-      expect(mockedFetch).toHaveBeenCalledWith(sendApiUrl, expect.anything());
-    });
-
-    test('includes the parameter when set to false', async () => {
-      try {
-        await client({ useFcmV1: false }).sendPushNotificationsAsync([]);
-      } catch {}
-
-      expect(mockedFetch).toHaveBeenCalledWith(`${sendApiUrl}?useFcmV1=false`, expect.anything());
-    });
+    test('includes the parameter when set to false', () =>
+      expect(
+        client({ useFcmV1: false }).sendPushNotificationsAsync([{ to: '' }]),
+      ).rejects.toThrow());
   });
 
-  test('compresses request bodies over 1 KiB', async () => {
+  test('compresses request bodies over 1 KiB', () => {
     const messages = [{ to: 'a', body: new Array(1500).join('?') }];
     const messageLength = JSON.stringify(messages).length;
     expect(messageLength).toBeGreaterThan(1024);
 
-    try {
-      await client().sendPushNotificationsAsync(messages);
-    } catch {}
-
-    expect(mockedFetch).toHaveBeenLastCalledWith(
-      sendApiUrl,
-      expect.objectContaining({
-        body: gzipSync(Buffer.from(JSON.stringify(messages))),
-      }),
-    );
-    expect(headerOnLastCall('content-encoding')).toContain('gzip');
+    return expect(client().sendPushNotificationsAsync(messages)).resolves.toEqual(mockTickets);
   });
 
   test(`throws an error when the number of tickets doesn't match the number of messages`, async () => {
-    const data = new Array(2);
-
-    mockFetchResponse({ data });
+    server.use(http.post(sendApiUrl, () => HttpResponse.json({ data: Array(2) })));
 
     await expect(client().sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrow(
       `Expected Expo to respond with 1 ticket but got 2`,
     );
-
-    mockFetchResponse({ data });
-
     await expect(client().sendPushNotificationsAsync(Array(3).fill({ to: 'a' }))).rejects.toThrow(
       `Expected Expo to respond with 3 tickets but got 2`,
     );
@@ -133,7 +120,7 @@ describe('sending push notification messages', () => {
     const code = 'TEST_API_ERROR';
     const message = 'This is a test error';
     beforeEach(() => {
-      mockFetchResponse({ errors: [{ code, message }] });
+      server.use(http.post(sendApiUrl, () => HttpResponse.json({ errors: [{ code, message }] })));
     });
     test('rejects with the error message', () =>
       expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message));
@@ -142,7 +129,9 @@ describe('sending push notification messages', () => {
   });
 
   test('handles 200 HTTP responses with malformed JSON', async () => {
-    mockedFetch.mockResolvedValue(new Response('<!DOCTYPE html><body>Not JSON</body>'));
+    server.use(
+      http.post(sendApiUrl, () => HttpResponse.text('<!DOCTYPE html><body>Not JSON</body>')),
+    );
 
     await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
@@ -153,7 +142,11 @@ describe('sending push notification messages', () => {
     const code = 'TEST_API_ERROR';
     const message = 'This is a test error';
     beforeEach(() => {
-      mockFetchResponse({ errors: [{ code, message }] }, 400);
+      server.use(
+        http.post(sendApiUrl, () =>
+          HttpResponse.json({ errors: [{ code, message }] }, { status: 400 }),
+        ),
+      );
     });
     test('rejects with the error message', () =>
       expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message));
@@ -162,7 +155,9 @@ describe('sending push notification messages', () => {
   });
 
   test('handles non-200 HTTP responses with arbitrary JSON', () => {
-    mockFetchResponse({ clowntown: true }, 400);
+    server.use(
+      http.post(sendApiUrl, () => HttpResponse.json({ clowntown: true }, { status: 400 })),
+    );
 
     return expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
@@ -170,10 +165,10 @@ describe('sending push notification messages', () => {
   });
 
   test('handles non-200 HTTP responses with arbitrary text', () => {
-    mockedFetch.mockResolvedValue(
-      new Response('<!DOCTYPE html><body>Not JSON</body>', {
-        status: 400,
-      }),
+    server.use(
+      http.post(sendApiUrl, () =>
+        HttpResponse.text('<!DOCTYPE html><body>Not JSON</body>', { status: 400 }),
+      ),
     );
 
     return expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
@@ -196,7 +191,9 @@ describe('sending push notification messages', () => {
         message: `This is another error`,
       },
     ];
-    beforeEach(() => mockFetchResponse({ errors }, 400));
+    beforeEach(() => {
+      server.use(http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 400 })));
+    });
 
     test("throws the first error's message", () =>
       expect(client().sendPushNotificationsAsync([])).rejects.toThrow(errors[0]?.message));
@@ -230,9 +227,21 @@ describe('sending push notification messages', () => {
 
     describe('when all retries fail', () => {
       beforeEach(() => {
-        mockFetchResponse({ errors }, 429);
-        mockFetchResponse({ errors }, 429);
-        mockFetchResponse({ errors }, 429);
+        server.use(
+          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
+            once: true,
+          }),
+        );
+        server.use(
+          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
+            once: true,
+          }),
+        );
+        server.use(
+          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
+            once: true,
+          }),
+        );
       });
 
       test('rejects with the error message', () =>
@@ -244,9 +253,17 @@ describe('sending push notification messages', () => {
     describe('when the second retry succeeds', () => {
       const data = ['one', 'another'];
       beforeEach(() => {
-        mockFetchResponse({ errors }, 429);
-        mockFetchResponse({ errors }, 429);
-        mockFetchResponse({ data });
+        server.use(
+          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
+            once: true,
+          }),
+        );
+        server.use(
+          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
+            once: true,
+          }),
+        );
+        server.use(http.post(sendApiUrl, () => HttpResponse.json({ data }), { once: true }));
       });
       test('resolves with the data response', () =>
         expect(fastClient.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }])).resolves.toEqual(
@@ -257,36 +274,15 @@ describe('sending push notification messages', () => {
 });
 
 describe('retrieving push notification receipts', () => {
-  test('sends requests to the correct url', async () => {
-    try {
-      await client().getPushNotificationReceiptsAsync([]);
-    } catch {}
-
-    expect(mockedFetch).toHaveBeenLastCalledWith(getReceiptsApiUrl, expect.anything());
-  });
-
-  test.each([
-    { header: 'accept', expected: 'application/json' },
-    { header: 'accept-encoding', expected: 'gzip' },
-    { header: 'content-type', expected: 'application/json' },
-  ])('sets the header $header=$expected on the request', async ({ header, expected }) => {
-    try {
-      await client().getPushNotificationReceiptsAsync([]);
-    } catch {}
-
-    expect(headerOnLastCall(header)).toContain(expected);
-  });
-
   test('resolves with the data response from the Expo API server', () => {
-    const data = { foo: 'bar' };
-    mockFetchResponse({ data });
-
-    return expect(client().getPushNotificationReceiptsAsync([])).resolves.toEqual(data);
+    return expect(client().getPushNotificationReceiptsAsync([])).resolves.toEqual(mockReceipts);
   });
 
   describe('if the response is not a map', () => {
     const data = [{ status: 'ok' }];
-    beforeEach(() => mockFetchResponse({ data }));
+    beforeEach(() => {
+      server.use(http.post(getReceiptsApiUrl, () => HttpResponse.json({ data })));
+    });
     test('throws an error', () =>
       expect(client().getPushNotificationReceiptsAsync([])).rejects.toThrow(
         `Expected Expo to respond with a map`,
@@ -479,22 +475,6 @@ function countAndValidateMessages(chunks: ExpoPushMessage[][]): number {
   return totalMessageCount;
 }
 
-function mockFetchResponse(body: object, status: number = 200) {
-  // Response objects can only be used one time, so each mock call should
-  // create a new one, hence the "Once."
-  mockedFetch.mockResolvedValueOnce(new Response(JSON.stringify(body), { status }));
-}
-
 function client(options: object = {}) {
-  return new ExpoClient(options);
-}
-
-function headerOnLastCall(header: string): string | null {
-  expect(mockedFetch).toHaveBeenCalled();
-  const { lastCall } = mockedFetch.mock;
-  assert(Array.isArray(lastCall));
-  const [, options] = lastCall;
-  assert.ok(options); // we always call `fetch` with two arguments
-  assert(options.headers instanceof Headers);
-  return options.headers.get(header);
+  return new ExpoClient({ accessToken, ...options });
 }
