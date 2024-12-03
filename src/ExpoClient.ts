@@ -351,11 +351,11 @@ export type ExpoPushMessage = {
   subtitle?: string;
   body?: string;
   sound?:
-    | 'default'
+    | string
     | null
     | {
         critical?: boolean;
-        name?: 'default' | null;
+        name?: string | null;
         volume?: number;
       };
   ttl?: number;
