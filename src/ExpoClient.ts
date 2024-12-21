@@ -225,12 +225,25 @@ export class Expo {
       requestHeaders.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(url, {
+    const fetchOptions: {
+      method: 'get' | 'post';
+      headers: Headers;
+      body?: string | Buffer;
+      dispatcher?: Agent;
+    } = {
       method: options.httpMethod,
-      // body: requestBody, FIXME
       headers: requestHeaders,
-      // dispatcher: this.httpAgent, FIXME
-    });
+    };
+
+    if (requestBody) {
+      fetchOptions.body = requestBody;
+    }
+
+    if (this.httpAgent) {
+      fetchOptions.dispatcher = this.httpAgent;
+    }
+
+    const response = await fetch(url, fetchOptions);
 
     if (response.status !== 200) {
       const apiError = await this.parseErrorResponseAsync(response);
