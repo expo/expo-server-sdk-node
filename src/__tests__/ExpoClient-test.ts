@@ -4,7 +4,6 @@ import { setupServer } from 'msw/node';
 import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
-
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
 
