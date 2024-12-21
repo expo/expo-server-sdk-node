@@ -1,29 +1,29 @@
 name: Tests
-on: push
+on: 
+  push:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [18, 20, 22]
     steps:
     - uses: actions/checkout@v4
+    - run: corepack enable
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Cache Node.js modules
-      uses: actions/cache@v4
-      with:
-        path: ${{ github.workspace }}/node_modules
-        key: ${{ runner.OS }}-${{ matrix.node-version}}-node_modules-${{ hashFiles('yarn.lock') }}
-    - run: yarn --frozen-lockfile
+        cache: yarn
+    - run: yarn --immutable
+    - run: yarn add -D @types/node@${{ matrix.node-version }}
+    - run: yarn tsc
     - run: yarn lint --max-warnings=0
     - run: yarn test --coverage
-    - name: Create coverage report flag
-      id: codecov-flag
-      run: echo "::set-output name=flag::node_${NODE_VERSION/./_}"
-      env:
-        NODE_VERSION: ${{ matrix.node-version }}
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v5
       with:
-        flags: ${{ steps.codecov-flag.outputs.flag }}
+        flags: "node_${{ matrix.node-version }}"
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

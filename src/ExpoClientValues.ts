@@ -4,7 +4,7 @@
  * The EXPO_BASE_URL environment variable is only for internal Expo use
  * when testing the push service locally.
  */
-const baseUrl = process.env.EXPO_BASE_URL ?? 'https://exp.host';
+const baseUrl = process.env['EXPO_BASE_URL'] ?? 'https://exp.host';
 
 export const sendApiUrl = `${baseUrl}/--/api/v2/push/send`;
 

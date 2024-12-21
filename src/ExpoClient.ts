@@ -5,11 +5,10 @@
  * Application Services
  * https://expo.dev
  */
-import assert from 'assert';
-import promiseLimit from 'promise-limit';
-import promiseRetry from 'promise-retry';
-import zlib from 'zlib';
-import { Agent, fetch } from 'undici';
+import assert from "assert";
+import promiseLimit from "promise-limit";
+import zlib from "zlib";
+import { Agent, fetch } from "undici";
 
 import {
   defaultConcurrentRequestLimit,
@@ -18,24 +17,25 @@ import {
   pushNotificationReceiptChunkLimit,
   requestRetryMinTimeout,
   sendApiUrl,
-} from './ExpoClientValues';
+} from "./ExpoClientValues";
 
 export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
-  static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
+  static pushNotificationReceiptChunkSizeLimit =
+    pushNotificationReceiptChunkLimit;
 
   private httpAgent: Agent | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
   private useFcmV1: boolean | undefined;
+  private retryMinTimeout: number;
 
-  constructor(options: ExpoClientOptions = {}) {
+  constructor(options: Partial<ExpoClientOptions> = {}) {
     this.httpAgent = options.httpAgent;
     this.limitConcurrentRequests = promiseLimit(
-      options.maxConcurrentRequests != null
-        ? options.maxConcurrentRequests
-        : defaultConcurrentRequestLimit,
+      options.maxConcurrentRequests ?? defaultConcurrentRequestLimit,
     );
+    this.retryMinTimeout = options.retryMinTimeout ?? requestRetryMinTimeout;
     this.accessToken = options.accessToken;
     this.useFcmV1 = options.useFcmV1;
   }
@@ -45,10 +45,13 @@ export class Expo {
    */
   static isExpoPushToken(token: unknown): token is ExpoPushToken {
     return (
-      typeof token === 'string' &&
-      (((token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[')) &&
-        token.endsWith(']')) ||
-        /^[a-z\d]{8}-[a-z\d]{4}-[a-z\d]{4}-[a-z\d]{4}-[a-z\d]{12}$/i.test(token))
+      typeof token === "string" &&
+      (((token.startsWith("ExponentPushToken[") ||
+        token.startsWith("ExpoPushToken[")) &&
+        token.endsWith("]")) ||
+        /^[a-z\d]{8}-[a-z\d]{4}-[a-z\d]{4}-[a-z\d]{4}-[a-z\d]{12}$/i.test(
+          token,
+        ))
     );
   }
 
@@ -63,11 +66,13 @@ export class Expo {
    * `chunkPushNotifications` to divide an array of push notification messages into appropriately
    * sized chunks.
    */
-  async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
+  async sendPushNotificationsAsync(
+    messages: ExpoPushMessage[],
+  ): Promise<ExpoPushTicket[]> {
     const url = new URL(sendApiUrl);
     // Only append the useFcmV1 option if the option is set to false
     if (this.useFcmV1 === false) {
-      url.searchParams.append('useFcmV1', String(this.useFcmV1));
+      url.searchParams.append("useFcmV1", String(this.useFcmV1));
     }
     const actualMessagesCount = Expo._getActualMessageCount(messages);
     const data = await this.limitConcurrentRequests(async () => {
@@ -75,7 +80,7 @@ export class Expo {
         async (retry): Promise<any> => {
           try {
             return await this.requestAsync(url.toString(), {
-              httpMethod: 'post',
+              httpMethod: "post",
               body: messages,
               shouldCompress(body) {
                 return body.length > 1024;
@@ -92,18 +97,17 @@ export class Expo {
         {
           retries: 2,
           factor: 2,
-          minTimeout: requestRetryMinTimeout,
+          minTimeout: this.retryMinTimeout,
         },
       );
     });
 
     if (!Array.isArray(data) || data.length !== actualMessagesCount) {
       const apiError: ExtensibleError = new Error(
-        `Expected Expo to respond with ${actualMessagesCount} ${
-          actualMessagesCount === 1 ? 'ticket' : 'tickets'
+        `Expected Expo to respond with ${actualMessagesCount} ${actualMessagesCount === 1 ? "ticket" : "tickets"
         } but got ${data.length}`,
       );
-      apiError.data = data;
+      apiError["data"] = data;
       throw apiError;
     }
 
@@ -114,18 +118,18 @@ export class Expo {
     receiptIds: ExpoPushReceiptId[],
   ): Promise<{ [id: string]: ExpoPushReceipt }> {
     const data = await this.requestAsync(getReceiptsApiUrl, {
-      httpMethod: 'post',
+      httpMethod: "post",
       body: { ids: receiptIds },
       shouldCompress(body) {
         return body.length > 1024;
       },
     });
 
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
       const apiError: ExtensibleError = new Error(
         `Expected Expo to respond with a map from receipt IDs to receipts but received data of another type`,
       );
-      apiError.data = data;
+      apiError["data"] = data;
       throw apiError;
     }
 
@@ -178,7 +182,9 @@ export class Expo {
     return chunks;
   }
 
-  chunkPushNotificationReceiptIds(receiptIds: ExpoPushReceiptId[]): ExpoPushReceiptId[][] {
+  chunkPushNotificationReceiptIds(
+    receiptIds: ExpoPushReceiptId[],
+  ): ExpoPushReceiptId[][] {
     return this.chunkItems(receiptIds, pushNotificationReceiptChunkLimit);
   }
 
@@ -200,38 +206,46 @@ export class Expo {
     return chunks;
   }
 
-  private async requestAsync(url: string, options: RequestOptions): Promise<any> {
+  private async requestAsync(
+    url: string,
+    options: RequestOptions,
+  ): Promise<any> {
     let requestBody: string | Buffer | undefined;
 
-    const sdkVersion = require('../package.json').version;
+    const sdkVersion = require("../package.json").version;
     type RequestHeaders = {
       Accept: string;
-      'Accept-Encoding': string;
-      'User-Agent': string;
+      "Accept-Encoding": string;
+      "User-Agent": string;
       Authorization?: string;
-      'Content-Encoding'?: string;
-      'Content-Type'?: string;
+      "Content-Encoding"?: string;
+      "Content-Type"?: string;
     };
     const requestHeaders: RequestHeaders = {
-      Accept: 'application/json',
-      'Accept-Encoding': 'gzip, deflate',
-      'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
+      Accept: "application/json",
+      "Accept-Encoding": "gzip, deflate",
+      "User-Agent": `expo-server-sdk-node/${sdkVersion}`,
     };
     if (this.accessToken) {
-      requestHeaders['Authorization'] = `Bearer ${this.accessToken}`;
+      requestHeaders["Authorization"] = `Bearer ${this.accessToken}`;
     }
 
     if (options.body != null) {
       const json = JSON.stringify(options.body);
       assert(json != null, `JSON request body must not be null`);
       if (options.shouldCompress(json)) {
-        requestBody = await gzipAsync(Buffer.from(json));
-        requestHeaders['Content-Encoding'] = 'gzip';
+				<<<<<< <HEAD
+        requestBody = await gzipAsync(Buffer.from(json))
+        requestHeaders["Content-Encoding"] = "gzip";
+				=======
+        requestBody = gzipSync(Buffer.from(json))
+        requestHeaders.set("Content-Encoding", "gzip");
+				>>>>>>> upstream / main
       } else {
         requestBody = json;
       }
 
-      requestHeaders['Content-Type'] = 'application/json';
+      requestHeaders["Content-Type"] = "application/json";
     }
 
     const response = await fetch(url, {
@@ -273,119 +287,146 @@ export class Expo {
       return await this.getTextResponseErrorAsync(response, textBody);
     }
 
-    if (!result.errors || !Array.isArray(result.errors) || !result.errors.length) {
-      const apiError: ExtensibleError = await this.getTextResponseErrorAsync(response, textBody);
-      apiError.errorData = result;
+    if (
+      !result.errors ||
+      !Array.isArray(result.errors) ||
+      !result.errors.length
+    ) {
+      const apiError: ExtensibleError = await this.getTextResponseErrorAsync(
+        response,
+        textBody,
+      );
+      apiError["errorData"] = result;
       return apiError;
     }
 
     return this.getErrorFromResult(response, result);
   }
 
-  private async getTextResponseErrorAsync(response: Response, text: string): Promise<Error> {
+  private async getTextResponseErrorAsync(
+    response: Response,
+    text: string,
+  ): Promise<Error> {
     const apiError: ExtensibleError = new Error(
-      `Expo responded with an error with status code ${response.status}: ` + text,
+      `Expo responded with an error with status code ${response.status}: ` +
+      text,
     );
-    apiError.statusCode = response.status;
-    apiError.errorText = text;
+    apiError["statusCode"] = response.status;
+    apiError["errorText"] = text;
     return apiError;
   }
 
-  /**
-   * Returns an error for the first API error in the result, with an optional `others` field that
-   * contains any other errors.
-   */
-  private getErrorFromResult(response: Response, result: ApiResult): Error {
-    assert(result.errors && result.errors.length > 0, `Expected at least one error from Expo`);
-    const [errorData, ...otherErrorData] = result.errors!;
-    const error: ExtensibleError = this.getErrorFromResultError(errorData);
+	/**
+	 * Returns an error for the first API error in the result, with an optional `others` field that
+	 * contains any other errors.
+	 */
+	<<<<<< <
+  HEAD;
+	private getErrorFromResult(response: Response, result: ApiResult): Error {
+  assert(
+    result.errors && result.errors.length > 0,
+    `Expected at least one error from Expo`,
+  );
+  const [errorData, ...otherErrorData] = result.errors!;
+  const error: ExtensibleError = this.getErrorFromResultError(errorData);
+		=======
+  private getErrorFromResult(response: FetchResponse, result: ApiResult): Error
+  {
+    const noErrorsMessage = `Expected at least one error from Expo`;
+    assert(result.errors, noErrorsMessage);
+    const [errorData, ...otherErrorData] = result.errors;
+    assert.ok(errorData, noErrorsMessage);
+    const error = this.getErrorFromResultError(errorData);
+			>>>>>>> upstream / main
     if (otherErrorData.length) {
-      error.others = otherErrorData.map((data) => this.getErrorFromResultError(data));
+      error["others"] = otherErrorData.map((data) =>
+        this.getErrorFromResultError(data),
+      );
     }
-    error.statusCode = response.status;
+    error["statusCode"] = response.status;
     return error;
   }
 
   /**
    * Returns an error for a single API error
    */
-  private getErrorFromResultError(errorData: ApiResultError): Error {
+  private
+  getErrorFromResultError(errorData: ApiResultError)
+		: ExtensibleError
+  {
     const error: ExtensibleError = new Error(errorData.message);
-    error.code = errorData.code;
+    error["code"] = errorData.code;
 
     if (errorData.details != null) {
-      error.details = errorData.details;
+      error["details"] = errorData.details;
     }
 
     if (errorData.stack != null) {
-      error.serverStack = errorData.stack;
+      error["serverStack"] = errorData.stack;
     }
 
     return error;
   }
 
-  static _getActualMessageCount(messages: ExpoPushMessage[]): number {
-    return messages.reduce((total, message) => {
-      if (Array.isArray(message.to)) {
-        total += message.to.length;
-      } else {
-        total++;
-      }
-      return total;
-    }, 0);
-  }
+  static
+  _getActualMessageCount(messages: ExpoPushMessage[])
+		: number
+  return messages.reduce((total, message) => {
+    if (Array.isArray(message.to)) {
+      total += message.to.length;
+    } else {
+      total++;
+    }
+    return total;
+  }, 0);
 }
 
-export default Expo;
+	export ;
+	default ;
+Expo;
 
-function gzipAsync(data: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    zlib.gzip(data, (error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    });
-  });
+	export ;
+type;
+ExpoClientOptions = {
+  httpAgent: Agent;
+  maxConcurrentRequests: number;
+  retryMinTimeout: number;
+  accessToken: string;
+  useFcmV1: boolean;
 }
-
-export type ExpoClientOptions = {
-  httpAgent?: Agent;
-  maxConcurrentRequests?: number;
-  accessToken?: string;
-  useFcmV1?: boolean;
-};
 
 export type ExpoPushToken = string;
 
+// see "Message request format" at https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
 export type ExpoPushMessage = {
   to: ExpoPushToken | ExpoPushToken[];
-  data?: object;
+  data?: Record<string, unknown>;
   title?: string;
   subtitle?: string;
   body?: string;
   sound?:
-    | 'default'
-    | null
-    | {
-        critical?: boolean;
-        name?: 'default' | null;
-        volume?: number;
-      };
+  | string
+  | null
+  | {
+    critical?: boolean;
+    name?: string | null;
+    volume?: number;
+  };
   ttl?: number;
   expiration?: number;
-  priority?: 'default' | 'normal' | 'high';
+  priority?: "default" | "normal" | "high";
+  interruptionLevel?: "active" | "critical" | "passive" | "time-sensitive";
   badge?: number;
   channelId?: string;
   categoryId?: string;
   mutableContent?: boolean;
+  _contentAvailable?: boolean;
 };
 
 export type ExpoPushReceiptId = string;
 
 export type ExpoPushSuccessTicket = {
-  status: 'ok';
+  status: "ok";
   id: ExpoPushReceiptId;
 };
 
@@ -394,26 +435,26 @@ export type ExpoPushErrorTicket = ExpoPushErrorReceipt;
 export type ExpoPushTicket = ExpoPushSuccessTicket | ExpoPushErrorTicket;
 
 export type ExpoPushSuccessReceipt = {
-  status: 'ok';
+  status: "ok";
   details?: object;
   // Internal field used only by developers working on Expo
   __debug?: any;
 };
 
 export type ExpoPushErrorReceipt = {
-  status: 'error';
+  status: "error";
   message: string;
   details?: {
     error?:
-      | 'DeveloperError'
-      | 'DeviceNotRegistered'
-      | 'ExpoError'
-      | 'InvalidCredentials'
-      | 'MessageRateExceeded'
-      | 'MessageTooBig'
-      | 'ProviderError';
+    | "DeveloperError"
+    | "DeviceNotRegistered"
+    | "ExpoError"
+    | "InvalidCredentials"
+    | "MessageRateExceeded"
+    | "MessageTooBig"
+    | "ProviderError";
+    expoPushToken?: string;
   };
-  expoPushToken?: string;
   // Internal field used only by developers working on Expo
   __debug?: any;
 };
@@ -421,7 +462,7 @@ export type ExpoPushErrorReceipt = {
 export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
 type RequestOptions = {
-  httpMethod: 'get' | 'post';
+  httpMethod: "get" | "post";
   body?: any;
   shouldCompress: (body: string) => boolean;
 };

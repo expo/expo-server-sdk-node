@@ -1,6 +1,6 @@
 {
   "name": "expo-server-sdk",
-  "version": "3.11.0",
+  "version": "3.13.0",
   "description": "Server-side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
   "types": "build/ExpoClient.d.ts",
@@ -8,7 +8,7 @@
     "build"
   ],
   "scripts": {
-    "build": "./build.sh",
+    "build": "tsc --project tsconfig.build.json",
     "lint": "eslint src",
     "prepare": "yarn build",
     "test": "jest",
@@ -20,6 +20,14 @@
   },
   "jest": {
     "coverageDirectory": "<rootDir>/../coverage",
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 0
+      }
+    },
     "preset": "ts-jest",
     "rootDir": "src",
     "testEnvironment": "node"
@@ -45,13 +53,15 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
-    "@types/promise-retry": "^1.1.6",
+    "@tsconfig/node-lts": "^22.0.0",
+    "@tsconfig/strictest": "^2.0.5",
     "eslint": "^8.57.0",
-    "eslint-config-universe": "^12.0.0",
-    "fetch-mock": "^9.11.0",
+    "eslint-config-universe": "^14.0.0",
     "jest": "^29.7.0",
+    "msw": "^2.4.9",
     "prettier": "^3.2.5",
-    "ts-jest": "~29.1.2",
+    "ts-jest": "~29.2.5",
     "typescript": "^5.4.2"
-  }
+  },
+  "packageManager": "yarn@4.4.1"
 }
