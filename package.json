@@ -47,7 +47,6 @@
   },
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
-    "node-fetch": "^2.6.0",
     "promise-limit": "^2.7.0",
     "promise-retry": "^2.0.1",
     "undici": "^7.2.0"
@@ -55,7 +54,6 @@
   "devDependencies": {
     "@tsconfig/node-lts": "^22.0.0",
     "@tsconfig/strictest": "^2.0.5",
-    "@types/node-fetch": "^2.6.11",
     "@types/promise-retry": "^1.1.6",
     "eslint": "^8.57.0",
     "eslint-config-universe": "^14.0.0",
