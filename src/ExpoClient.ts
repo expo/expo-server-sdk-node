@@ -99,7 +99,8 @@ export class Expo {
 
     if (!Array.isArray(data) || data.length !== actualMessagesCount) {
       const apiError: ExtensibleError = new Error(
-        `Expected Expo to respond with ${actualMessagesCount} ${actualMessagesCount === 1 ? 'ticket' : 'tickets'
+        `Expected Expo to respond with ${actualMessagesCount} ${
+          actualMessagesCount === 1 ? 'ticket' : 'tickets'
         } but got ${data.length}`,
       );
       apiError['data'] = data;
@@ -362,13 +363,13 @@ export type ExpoPushMessage = {
   subtitle?: string;
   body?: string;
   sound?:
-  | string
-  | null
-  | {
-    critical?: boolean;
-    name?: string | null;
-    volume?: number;
-  };
+    | string
+    | null
+    | {
+        critical?: boolean;
+        name?: string | null;
+        volume?: number;
+      };
   ttl?: number;
   expiration?: number;
   priority?: 'default' | 'normal' | 'high';
@@ -403,13 +404,13 @@ export type ExpoPushErrorReceipt = {
   message: string;
   details?: {
     error?:
-    | 'DeveloperError'
-    | 'DeviceNotRegistered'
-    | 'ExpoError'
-    | 'InvalidCredentials'
-    | 'MessageRateExceeded'
-    | 'MessageTooBig'
-    | 'ProviderError';
+      | 'DeveloperError'
+      | 'DeviceNotRegistered'
+      | 'ExpoError'
+      | 'InvalidCredentials'
+      | 'MessageRateExceeded'
+      | 'MessageTooBig'
+      | 'ProviderError';
     expoPushToken?: string;
   };
   // Internal field used only by developers working on Expo
