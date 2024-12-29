@@ -52,17 +52,17 @@
     "promise-retry": "^2.0.1"
   },
   "devDependencies": {
-    "@tsconfig/node-lts": "^22.0.0",
-    "@tsconfig/strictest": "^2.0.5",
-    "@types/node-fetch": "^2.6.11",
-    "@types/promise-retry": "^1.1.6",
+    "@tsconfig/node-lts": "22.0.1",
+    "@tsconfig/strictest": "2.0.5",
+    "@types/node-fetch": "2.6.12",
+    "@types/promise-retry": "1.1.6",
     "eslint": "^8.57.0",
-    "eslint-config-universe": "^14.0.0",
-    "jest": "^29.7.0",
-    "msw": "^2.4.9",
-    "prettier": "^3.2.5",
-    "ts-jest": "~29.2.5",
-    "typescript": "^5.4.2"
+    "eslint-config-universe": "14.0.0",
+    "jest": "29.7.0",
+    "msw": "2.7.0",
+    "prettier": "3.4.2",
+    "ts-jest": "29.2.5",
+    "typescript": "5.7.2"
   },
   "packageManager": "yarn@4.6.0"
 }

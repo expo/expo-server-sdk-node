@@ -972,14 +972,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node-lts@npm:^22.0.0":
+"@tsconfig/node-lts@npm:22.0.1":
   version: 22.0.1
   resolution: "@tsconfig/node-lts@npm:22.0.1"
   checksum: 10c0/9e8dbe98daac8eaebd78fc3aea33ee479e7ec9c6f34550ca024ab48d5f9cbe225de8ab9d56e10cf7416261d3ad72b2657fbb8d560443dafb21eabf615b8ad98e
   languageName: node
   linkType: hard
 
-"@tsconfig/strictest@npm:^2.0.5":
+"@tsconfig/strictest@npm:2.0.5":
   version: 2.0.5
   resolution: "@tsconfig/strictest@npm:2.0.5"
   checksum: 10c0/cfc86da2d57f7b4b0827701b132c37a4974284e5c40649656c0e474866dfd8a69f57c6718230d8a8139967e2a95438586b8224c13ab0ff9d3a43eda771c50cc4
@@ -1075,7 +1075,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-fetch@npm:^2.6.11":
+"@types/node-fetch@npm:2.6.12":
   version: 2.6.12
   resolution: "@types/node-fetch@npm:2.6.12"
   dependencies:
@@ -1094,7 +1094,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/promise-retry@npm:^1.1.6":
+"@types/promise-retry@npm:1.1.6":
   version: 1.1.6
   resolution: "@types/promise-retry@npm:1.1.6"
   dependencies:
@@ -2282,7 +2282,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-universe@npm:^14.0.0":
+"eslint-config-universe@npm:14.0.0":
   version: 14.0.0
   resolution: "eslint-config-universe@npm:14.0.0"
   dependencies:
@@ -2623,20 +2623,20 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "expo-server-sdk@workspace:."
   dependencies:
-    "@tsconfig/node-lts": "npm:^22.0.0"
-    "@tsconfig/strictest": "npm:^2.0.5"
-    "@types/node-fetch": "npm:^2.6.11"
-    "@types/promise-retry": "npm:^1.1.6"
+    "@tsconfig/node-lts": "npm:22.0.1"
+    "@tsconfig/strictest": "npm:2.0.5"
+    "@types/node-fetch": "npm:2.6.12"
+    "@types/promise-retry": "npm:1.1.6"
     eslint: "npm:^8.57.0"
-    eslint-config-universe: "npm:^14.0.0"
-    jest: "npm:^29.7.0"
-    msw: "npm:^2.4.9"
+    eslint-config-universe: "npm:14.0.0"
+    jest: "npm:29.7.0"
+    msw: "npm:2.7.0"
     node-fetch: "npm:^2.6.0"
-    prettier: "npm:^3.2.5"
+    prettier: "npm:3.4.2"
     promise-limit: "npm:^2.7.0"
     promise-retry: "npm:^2.0.1"
-    ts-jest: "npm:~29.2.5"
-    typescript: "npm:^5.4.2"
+    ts-jest: "npm:29.2.5"
+    typescript: "npm:5.7.2"
   languageName: unknown
   linkType: soft
 
@@ -4025,7 +4025,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest@npm:^29.7.0":
+"jest@npm:29.7.0":
   version: 29.7.0
   resolution: "jest@npm:29.7.0"
   dependencies:
@@ -4474,7 +4474,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"msw@npm:^2.4.9":
+"msw@npm:2.7.0":
   version: 2.7.0
   resolution: "msw@npm:2.7.0"
   dependencies:
@@ -4899,7 +4899,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.2.5":
+"prettier@npm:3.4.2":
   version: 3.4.2
   resolution: "prettier@npm:3.4.2"
   bin:
@@ -5707,7 +5707,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-jest@npm:~29.2.5":
+"ts-jest@npm:29.2.5":
   version: 29.2.5
   resolution: "ts-jest@npm:29.2.5"
   dependencies:
@@ -5853,7 +5853,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.4.2":
+"typescript@npm:5.7.2":
   version: 5.7.2
   resolution: "typescript@npm:5.7.2"
   bin:
@@ -5863,7 +5863,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.4.2#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A5.7.2#optional!builtin<compat/typescript>":
   version: 5.7.2
   resolution: "typescript@patch:typescript@npm%3A5.7.2#optional!builtin<compat/typescript>::version=5.7.2&hash=5786d5"
   bin:
