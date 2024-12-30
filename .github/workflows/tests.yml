@@ -9,9 +9,9 @@ jobs:
       matrix:
         node-version: [18, 20, 22]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
     - run: corepack enable
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: yarn
@@ -20,7 +20,7 @@ jobs:
     - run: yarn tsc
     - run: yarn lint --max-warnings=0
     - run: yarn test --coverage
-    - uses: codecov/codecov-action@v5
+    - uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5
       with:
         flags: "node_${{ matrix.node-version }}"
       env:
