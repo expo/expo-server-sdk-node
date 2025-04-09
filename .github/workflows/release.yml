@@ -10,8 +10,6 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4
         id: release
-        with:
-          release-type: node
       # The logic below handles the npm publication:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         # these if statements ensure that a publication only occurs when
