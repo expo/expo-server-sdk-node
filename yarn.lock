@@ -2630,7 +2630,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     eslint-config-universe: "npm:14.0.0"
     jest: "npm:29.7.0"
-    msw: "npm:2.7.3"
+    msw: "npm:2.7.4"
     node-fetch: "npm:^2.6.0"
     prettier: "npm:3.5.3"
     promise-limit: "npm:^2.7.0"
@@ -4474,9 +4474,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"msw@npm:2.7.3":
-  version: 2.7.3
-  resolution: "msw@npm:2.7.3"
+"msw@npm:2.7.4":
+  version: 2.7.4
+  resolution: "msw@npm:2.7.4"
   dependencies:
     "@bundled-es-modules/cookie": "npm:^2.0.1"
     "@bundled-es-modules/statuses": "npm:^1.0.1"
@@ -4503,7 +4503,7 @@ __metadata:
       optional: true
   bin:
     msw: cli/index.js
-  checksum: 10c0/47cad1c4b4615b312477c8977fddfda3e90becd8efc2d81d73be8fb860e45ad0d3f7bca6d4f70ae7ed21894e93975bda66d609aafc3a1c99cb923c5ef67f8686
+  checksum: 10c0/cbae966ebd7eb460b179dc2792ae710bd88647a17cb983af9c00cf1705146e885a86c7ff5ba12bb5320d1f335f09367b0097c53166c0e43c8554035649b96c41
   languageName: node
   linkType: hard
 
