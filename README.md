@@ -51,6 +51,9 @@ for (let pushToken of somePushTokens) {
     sound: 'default',
     body: 'This is a test notification',
     data: { withSome: 'data' },
+    richContent: {
+      image: 'https://example.com/statics/some-image-here-if-you-want.jpg'
+    },
   })
 }
 
