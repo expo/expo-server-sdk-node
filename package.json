@@ -57,7 +57,7 @@
     "@types/node-fetch": "2.6.12",
     "@types/promise-retry": "1.1.6",
     "eslint": "^8.57.0",
-    "eslint-config-universe": "14.0.0",
+    "eslint-config-universe": "15.0.3",
     "jest": "29.7.0",
     "msw": "2.7.5",
     "prettier": "3.5.3",
