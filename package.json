@@ -9,14 +9,11 @@
   ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
-    "lint": "eslint src",
+    "lint": "eslint",
     "prepare": "yarn build",
     "test": "jest",
     "tsc": "tsc",
     "watch": "tsc --watch"
-  },
-  "eslintConfig": {
-    "extends": "universe/node"
   },
   "jest": {
     "coverageDirectory": "<rootDir>/../coverage",
@@ -56,9 +53,10 @@
     "@tsconfig/strictest": "2.0.5",
     "@types/node-fetch": "2.6.12",
     "@types/promise-retry": "1.1.6",
-    "eslint": "^8.57.0",
-    "eslint-config-universe": "14.0.0",
+    "eslint": "^9.26.0",
+    "eslint-config-universe": "^15.0.3",
     "jest": "29.7.0",
+    "jiti": "^2.4.2",
     "msw": "2.7.5",
     "prettier": "3.5.3",
     "ts-jest": "29.3.2",
