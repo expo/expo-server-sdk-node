@@ -1,27 +1,46 @@
 name: Tests
-on: 
+on:
   push:
-  pull_request:
 jobs:
-  build:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - run: corepack enable
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
+        with:
+          cache: yarn
+      - run: yarn
+      - run: yarn tsc
+      # This command builds, and then prints files which would be included in the published package
+      - run: yarn pack --dry-run
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - run: corepack enable
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
+        with:
+          node-version-file: package.json
+          cache: yarn
+      - run: yarn
+      - run: yarn lint --max-warnings=0
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [18, 20, 22]
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-    - run: corepack enable
-    - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: yarn
-    - run: yarn --immutable
-    - run: yarn add -D @types/node@${{ matrix.node-version }}
-    - run: yarn tsc
-    - run: yarn lint --max-warnings=0
-    - run: yarn test --coverage
-    - uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5
-      with:
-        flags: "node_${{ matrix.node-version }}"
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - run: corepack enable
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: yarn
+      - run: yarn
+      - run: yarn test --coverage
+      - uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5
+        with:
+          flags: 'node_${{ matrix.node-version }}'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
