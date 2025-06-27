@@ -5,8 +5,8 @@ import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 
-import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
-import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
+import ExpoClient, { type ExpoPushMessage } from '../ExpoClient.ts';
+import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues.ts';
 
 const accessToken = 'foobar';
 const mockTickets = [{ status: 'ok', id: randomUUID() }];

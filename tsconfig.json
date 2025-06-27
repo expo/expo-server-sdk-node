@@ -1,9 +1,12 @@
 {
-  "extends": ["@tsconfig/strictest/tsconfig.json", "@tsconfig/node-lts/tsconfig.json"],
+  "extends": ["@tsconfig/strictest/tsconfig", "@tsconfig/node20/tsconfig"],
   "compilerOptions": {
+    "declaration": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "rewriteRelativeImportExtensions": true,
     "sourceMap": true,
-    "composite": true,
-    "noEmit": true
+    "verbatimModuleSyntax": true
   },
   "exclude": ["build", "coverage"]
 }

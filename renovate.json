@@ -1,11 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:best-practices"],
-  "labels": ["dependencies"],
-  "packageRules": [
-    {
-      "matchPackageNames": ["**node-fetch"],
-      "enabled": false
-    }
-  ]
+  "labels": ["dependencies"]
 }
