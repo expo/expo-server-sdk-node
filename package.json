@@ -2,7 +2,8 @@
   "name": "expo-server-sdk",
   "version": "3.15.0",
   "description": "Server-side library for working with Expo using Node.js",
-  "main": "build/ExpoClient.js",
+  "type": "module",
+  "exports": "build/ExpoClient.js",
   "types": "build/ExpoClient.d.ts",
   "files": [
     "build"
@@ -14,7 +15,7 @@
     "build": "yarn prepack",
     "lint": "eslint",
     "prepack": "tsc --project tsconfig.build.json",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "tsc": "tsc",
     "watch": "tsc --watch"
   },
@@ -33,7 +34,7 @@
   },
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^3.3.2",
     "promise-limit": "^2.7.0",
     "promise-retry": "^2.0.1"
   },
@@ -41,7 +42,6 @@
     "@tsconfig/node20": "20.1.6",
     "@tsconfig/strictest": "2.0.5",
     "@types/node": "20.19.1",
-    "@types/node-fetch": "2.6.12",
     "@types/promise-retry": "1.1.6",
     "eslint": "9.26.0",
     "eslint-config-universe": "15.0.3",

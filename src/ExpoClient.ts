@@ -5,7 +5,7 @@
  * Application Services
  * https://expo.dev
  */
-import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
+import fetch, { Response as FetchResponse, Headers } from 'node-fetch';
 import assert from 'node:assert';
 import { Agent } from 'node:http';
 import { gzipSync } from 'node:zlib';
@@ -19,7 +19,7 @@ import {
   pushNotificationReceiptChunkLimit,
   requestRetryMinTimeout,
   sendApiUrl,
-} from './ExpoClientValues';
+} from './ExpoClientValues.ts';
 
 export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
@@ -202,9 +202,9 @@ export class Expo {
   }
 
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
-    let requestBody: string | Buffer | undefined;
+    let requestBody: string | Buffer | null = null;
 
-    const sdkVersion = require('../package.json').version;
+    const sdkVersion = (await import('../package.json')).default.version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',

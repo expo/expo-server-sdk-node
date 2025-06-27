@@ -3,7 +3,10 @@
   "compilerOptions": {
     "declaration": true,
     "noEmit": true,
-    "sourceMap": true
+    "resolveJsonModule": true,
+    "rewriteRelativeImportExtensions": true,
+    "sourceMap": true,
+    "verbatimModuleSyntax": true
   },
   "exclude": ["build", "coverage"]
 }

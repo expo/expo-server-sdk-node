@@ -1,7 +1,7 @@
-import { createDefaultPreset } from 'ts-jest';
+import { createDefaultEsmPreset } from 'ts-jest';
 
 export default {
-  ...createDefaultPreset(),
+  ...createDefaultEsmPreset(),
   coverageProvider: 'v8',
   coverageThreshold: {
     global: {
