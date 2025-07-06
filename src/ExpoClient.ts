@@ -5,12 +5,11 @@
  * Application Services
  * https://expo.dev
  */
-import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
 import assert from 'node:assert';
-import { Agent } from 'node:http';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
+import { fetch, Agent, Response } from 'undici';
 
 import {
   defaultConcurrentRequestLimit,
@@ -227,12 +226,25 @@ export class Expo {
       requestHeaders.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(url, {
+    const fetchOptions: {
+      method: 'get' | 'post';
+      headers: Headers;
+      body?: string | Buffer;
+      dispatcher?: Agent;
+    } = {
       method: options.httpMethod,
-      body: requestBody,
       headers: requestHeaders,
-      agent: this.httpAgent,
-    });
+    };
+
+    if (requestBody) {
+      fetchOptions.body = requestBody;
+    }
+
+    if (this.httpAgent) {
+      fetchOptions.dispatcher = this.httpAgent;
+    }
+
+    const response = await fetch(url, fetchOptions);
 
     if (response.status !== 200) {
       const apiError = await this.parseErrorResponseAsync(response);
@@ -257,7 +269,7 @@ export class Expo {
     return result.data;
   }
 
-  private async parseErrorResponseAsync(response: FetchResponse): Promise<Error> {
+  private async parseErrorResponseAsync(response: Response): Promise<Error> {
     const textBody = await response.text();
     let result: ApiResult;
     try {
@@ -275,7 +287,7 @@ export class Expo {
     return this.getErrorFromResult(response, result);
   }
 
-  private async getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
+  private async getTextResponseErrorAsync(response: Response, text: string): Promise<Error> {
     const apiError: ExtensibleError = new Error(
       `Expo responded with an error with status code ${response.status}: ` + text,
     );
@@ -288,7 +300,7 @@ export class Expo {
    * Returns an error for the first API error in the result, with an optional `others` field that
    * contains any other errors.
    */
-  private getErrorFromResult(response: FetchResponse, result: ApiResult): Error {
+  private getErrorFromResult(response: Response, result: ApiResult): Error {
     const noErrorsMessage = `Expected at least one error from Expo`;
     assert(result.errors, noErrorsMessage);
     const [errorData, ...otherErrorData] = result.errors;
