@@ -376,6 +376,10 @@ export type ExpoPushMessage = {
   interruptionLevel?: 'active' | 'critical' | 'passive' | 'time-sensitive';
   badge?: number;
   channelId?: string;
+  icon?: string;
+  richContent?: {
+    image?: string;
+  };
   categoryId?: string;
   mutableContent?: boolean;
   _contentAvailable?: boolean;
