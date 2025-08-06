@@ -1058,7 +1058,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node18@npm:^18.2.4":
+"@tsconfig/node18@npm:18.2.4":
   version: 18.2.4
   resolution: "@tsconfig/node18@npm:18.2.4"
   checksum: 10c0/cdfd17f212660374eb2765cd5907b2252e43cfa2623cd52307a49f004327ef49bbe7d53c78b0aca57f33e9a5cb0d7d2eb5ded9be1235e6212f65c9f0699322b6
@@ -1194,7 +1194,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:18":
+"@types/node@npm:18.19.112":
   version: 18.19.112
   resolution: "@types/node@npm:18.19.112"
   dependencies:
@@ -2921,9 +2921,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "expo-server-sdk@workspace:."
   dependencies:
-    "@tsconfig/node18": "npm:^18.2.4"
+    "@tsconfig/node18": "npm:18.2.4"
     "@tsconfig/strictest": "npm:2.0.5"
-    "@types/node": "npm:18"
+    "@types/node": "npm:18.19.112"
     "@types/node-fetch": "npm:2.6.12"
     "@types/promise-retry": "npm:1.1.6"
     eslint: "npm:9.26.0"
