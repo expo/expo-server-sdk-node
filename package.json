@@ -1,6 +1,6 @@
 {
   "name": "expo-server-sdk",
-  "version": "3.15.0",
+  "version": "4.0.0",
   "description": "Server-side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
   "types": "build/ExpoClient.d.ts",
