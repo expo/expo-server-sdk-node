@@ -1,4 +1,4 @@
-# expo-server-sdk-node ![Tests](https://github.com/expo/expo-server-sdk-node/workflows/Tests/badge.svg) [![codecov](https://codecov.io/gh/expo/expo-server-sdk-node/branch/master/graph/badge.svg)](https://codecov.io/gh/expo/expo-server-sdk-node)
+# expo-server-sdk-node [![Tests](https://github.com/expo/expo-server-sdk-node/workflows/Tests/badge.svg)](https://github.com/expo/expo-server-sdk-node/actions/workflows/tests.yml) [![codecov](https://codecov.io/gh/expo/expo-server-sdk-node/branch/master/graph/badge.svg)](https://codecov.io/gh/expo/expo-server-sdk-node)
 
 Server-side library for working with Expo using Node.js.
 
