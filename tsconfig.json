@@ -5,5 +5,5 @@
     "noEmit": true,
     "sourceMap": true
   },
-  "exclude": ["build", "coverage", "eslint.config.ts"]
+  "exclude": ["build", "coverage"]
 }
