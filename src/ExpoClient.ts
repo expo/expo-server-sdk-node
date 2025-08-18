@@ -204,7 +204,8 @@ export class Expo {
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
     let requestBody: string | Buffer | undefined;
 
-    const sdkVersion = require('../package.json').version;
+    // Hardcode version to avoid require() issues in Deno/Edge Functions
+    const sdkVersion = '3.15.0';
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
