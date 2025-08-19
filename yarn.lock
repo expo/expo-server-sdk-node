@@ -1157,13 +1157,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-fetch@npm:2.6.12":
-  version: 2.6.12
-  resolution: "@types/node-fetch@npm:2.6.12"
+"@types/node-fetch@npm:2.6.13":
+  version: 2.6.13
+  resolution: "@types/node-fetch@npm:2.6.13"
   dependencies:
     "@types/node": "npm:*"
-    form-data: "npm:^4.0.0"
-  checksum: 10c0/7693acad5499b7df2d1727d46cff092a63896dc04645f36b973dd6dd754a59a7faba76fcb777bdaa35d80625c6a9dd7257cca9c401a4bab03b04480cda7fd1af
+    form-data: "npm:^4.0.4"
+  checksum: 10c0/6313c89f62c50bd0513a6839cdff0a06727ac5495ccbb2eeda51bb2bbbc4f3c0a76c0393a491b7610af703d3d2deb6cf60e37e59c81ceeca803ffde745dbf309
   languageName: node
   linkType: hard
 
@@ -2807,7 +2807,7 @@ __metadata:
     "@tsconfig/node20": "npm:20.1.6"
     "@tsconfig/strictest": "npm:2.0.5"
     "@types/node": "npm:22.17.2"
-    "@types/node-fetch": "npm:2.6.12"
+    "@types/node-fetch": "npm:2.6.13"
     "@types/promise-retry": "npm:1.1.6"
     eslint: "npm:9.33.0"
     eslint-config-universe: "npm:15.0.3"
@@ -2963,7 +2963,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"form-data@npm:^4.0.0":
+"form-data@npm:^4.0.4":
   version: 4.0.4
   resolution: "form-data@npm:4.0.4"
   dependencies:
