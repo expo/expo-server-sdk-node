@@ -226,14 +226,19 @@ export class Expo {
       requestHeaders.set('Content-Type', 'application/json');
     }
 
+    const headersRecord: Record<string, string> = {};
+    requestHeaders.forEach((value, key) => {
+      headersRecord[key] = value;
+    });
+
     const fetchOptions: {
       method: 'get' | 'post';
-      headers: Headers;
+      headers: Record<string, string>;
       body?: string | Buffer;
       dispatcher?: Agent;
     } = {
       method: options.httpMethod,
-      headers: requestHeaders,
+      headers: headersRecord,
     };
 
     if (requestBody) {
