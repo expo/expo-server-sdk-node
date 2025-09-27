@@ -1,16 +1,19 @@
 {
   "name": "expo-server-sdk",
-  "version": "3.15.0",
+  "version": "4.0.0",
   "description": "Server-side library for working with Expo using Node.js",
   "main": "build/ExpoClient.js",
   "types": "build/ExpoClient.d.ts",
   "files": [
     "build"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "yarn prepack",
     "lint": "eslint",
-    "prepare": "yarn build",
+    "prepack": "tsc --project tsconfig.build.json",
     "test": "jest",
     "tsc": "tsc",
     "watch": "tsc --watch"
@@ -49,17 +52,18 @@
     "undici": "^7.2.0"
   },
   "devDependencies": {
-    "@tsconfig/node-lts": "22.0.1",
+    "@tsconfig/node20": "20.1.6",
     "@tsconfig/strictest": "2.0.5",
+    "@types/node": "22.17.2",
     "@types/promise-retry": "1.1.6",
-    "eslint": "9.26.0",
+    "eslint": "9.33.0",
     "eslint-config-universe": "15.0.3",
     "jest": "29.7.0",
     "jiti": "2.4.2",
-    "msw": "2.10.2",
-    "prettier": "3.5.3",
-    "ts-jest": "29.3.2",
-    "typescript": "5.8.3"
+    "msw": "2.10.5",
+    "prettier": "3.6.2",
+    "ts-jest": "29.4.1",
+    "typescript": "5.9.2"
   },
-  "packageManager": "yarn@4.9.2"
+  "packageManager": "yarn@4.9.3"
 }
