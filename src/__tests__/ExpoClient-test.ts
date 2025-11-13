@@ -1,12 +1,13 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import { expect } from 'expect';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
+import { after, afterEach, before, beforeEach, describe, test } from 'node:test';
 import { gunzipSync } from 'node:zlib';
 
-import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
-import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
+import ExpoClient, { type ExpoPushMessage } from '../ExpoClient.ts';
+import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues.ts';
 
 const accessToken = 'foobar';
 const mockTickets = [{ status: 'ok', id: randomUUID() }];
@@ -69,11 +70,11 @@ const server = setupServer(
   }),
 );
 
-beforeAll(() => {
+before(() => {
   server.listen({ onUnhandledRequest: 'error' });
 });
 
-afterAll(() => {
+after(() => {
   server.close();
 });
 
