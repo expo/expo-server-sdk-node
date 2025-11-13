@@ -21,7 +21,7 @@ run = "yarn npm publish --dry-run"
 
 [tasks."checks:test"]
 depends = ["yarn"]
-run = "node --run test"
+run = "node --run test -- --experimental-test-coverage"
 
 [tasks."checks:lint"]
 depends = ["yarn"]
