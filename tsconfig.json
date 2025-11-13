@@ -1,12 +1,12 @@
 {
   "extends": [
     "@tsconfig/bases/strictest",
-    "@tsconfig/bases/node20" // The minimum supported major node version
+    "@tsconfig/bases/node20", // The minimum supported major node version
+    "@tsconfig/bases/node-ts"
   ],
   "compilerOptions": {
     "declaration": true,
-    "noEmit": true,
-    "sourceMap": true
+    "noEmit": true
   },
   "exclude": ["build", "coverage"]
 }

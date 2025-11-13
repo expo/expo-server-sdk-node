@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test } from '@jest/globals';
-import assert from 'node:assert';
+import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { afterEach, beforeEach, describe, test } from 'node:test';
 import { gunzipSync } from 'node:zlib';
 import { MockAgent, setGlobalDispatcher } from 'undici';
 
-import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
-import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
+import ExpoClient, { type ExpoPushMessage } from '../ExpoClient.ts';
+import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues.ts';
 
 const apiBaseUrl = 'https://exp.host';
 const accessToken = 'foobar';
@@ -29,9 +29,7 @@ describe('sending push notification messages', () => {
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
 
-    await expect(client().sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(
-      mockTickets,
-    );
+    assert.deepEqual(await client().sendPushNotificationsAsync([{ to: 'one' }]), mockTickets);
   });
 
   test('throws an error if the bearer token is invalid', async () => {
@@ -40,15 +38,16 @@ describe('sending push notification messages', () => {
       .intercept({ path: sendApiUrl, method: 'POST' })
       .reply(401, { error: 'invalid_token', error_description: 'The bearer token is invalid' });
 
-    await expect(client().sendPushNotificationsAsync([{ to: 'one' }])).rejects.toThrow(
-      'The bearer token is invalid',
+    await assert.rejects(
+      client().sendPushNotificationsAsync([{ to: 'one' }]),
+      /The bearer token is invalid/,
     );
   });
 
   test('compresses request bodies over 1 KiB', async () => {
     const messages = [{ to: 'a', body: new Array(1500).join('?') }];
     const messageLength = JSON.stringify(messages).length;
-    expect(messageLength).toBeGreaterThan(1024);
+    assert(messageLength > 1024);
 
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool
@@ -65,7 +64,7 @@ describe('sending push notification messages', () => {
       })
       .reply(200, { data: mockTickets });
 
-    await expect(client().sendPushNotificationsAsync(messages)).resolves.toEqual(mockTickets);
+    assert.deepEqual(await client().sendPushNotificationsAsync(messages), mockTickets);
   });
 
   test('uses the httpAgent when provided', async () => {
@@ -76,7 +75,8 @@ describe('sending push notification messages', () => {
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
 
     const clientWithAgent = client({ httpAgent });
-    await expect(clientWithAgent.sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(
+    assert.deepEqual(
+      await clientWithAgent.sendPushNotificationsAsync([{ to: 'one' }]),
       mockTickets,
     );
     await httpAgent.close();
@@ -85,15 +85,15 @@ describe('sending push notification messages', () => {
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: [{}, {}] });
 
-    await expect(client().sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrow(
-      `Expected Expo to respond with 1 ticket but got 2`,
-    );
+    await assert.rejects(client().sendPushNotificationsAsync([{ to: 'a' }]), {
+      message: 'Expected Expo to respond with 1 ticket but got 2',
+    });
 
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: [{}, {}] });
 
-    await expect(client().sendPushNotificationsAsync(Array(3).fill({ to: 'a' }))).rejects.toThrow(
-      `Expected Expo to respond with 3 tickets but got 2`,
-    );
+    await assert.rejects(client().sendPushNotificationsAsync(Array(3).fill({ to: 'a' })), {
+      message: 'Expected Expo to respond with 3 tickets but got 2',
+    });
   });
 
   describe('200 response with well-formed API errors', () => {
@@ -107,10 +107,10 @@ describe('sending push notification messages', () => {
     });
 
     test('rejects with the error message', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message);
+      await assert.rejects(client().sendPushNotificationsAsync([]), { message });
     });
     test('rejects with the error code', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code });
+      await assert.rejects(client().sendPushNotificationsAsync([]), { code });
     });
   });
 
@@ -120,9 +120,7 @@ describe('sending push notification messages', () => {
       .intercept({ path: sendApiUrl, method: 'POST' })
       .reply(200, '<!DOCTYPE html><body>Not JSON</body>');
 
-    await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
-      `Expo responded with an error`,
-    );
+    await assert.rejects(client().sendPushNotificationsAsync([]), /Expo responded with an error/);
   });
 
   describe('non-200 response with well-formed API errors', () => {
@@ -136,10 +134,10 @@ describe('sending push notification messages', () => {
     });
 
     test('rejects with the error message', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message);
+      await assert.rejects(client().sendPushNotificationsAsync([]), { message });
     });
     test('rejects with the error code', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code });
+      await assert.rejects(client().sendPushNotificationsAsync([]), { code });
     });
   });
 
@@ -147,9 +145,7 @@ describe('sending push notification messages', () => {
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(400, { clowntown: true });
 
-    await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
-      `Expo responded with an error`,
-    );
+    await assert.rejects(client().sendPushNotificationsAsync([]), /Expo responded with an error/);
   });
 
   test('handles non-200 HTTP responses with arbitrary text', async () => {
@@ -158,9 +154,7 @@ describe('sending push notification messages', () => {
       .intercept({ path: sendApiUrl, method: 'POST' })
       .reply(400, '<!DOCTYPE html><body>Not JSON</body>');
 
-    await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
-      `Expo responded with an error`,
-    );
+    await assert.rejects(client().sendPushNotificationsAsync([]), /Expo responded with an error/);
   });
 
   describe('well-formed API responses with multiple errors and extra details', () => {
@@ -184,31 +178,34 @@ describe('sending push notification messages', () => {
     });
 
     test("throws the first error's message", async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(errors[0]?.message);
+      await assert.rejects(client().sendPushNotificationsAsync([]), {
+        message: errors[0]?.message,
+      });
     });
 
     test('rejects with the code of the first error', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+      await assert.rejects(client().sendPushNotificationsAsync([]), {
         code: errors[0]?.code,
       });
     });
 
     test('rejects with the details of the first error', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+      await assert.rejects(client().sendPushNotificationsAsync([]), {
         details: errors[0]?.details,
       });
     });
 
     test('rejects with the stack of the the first error as "serverStack"', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+      await assert.rejects(client().sendPushNotificationsAsync([]), {
         serverStack: errors[0]?.stack,
       });
     });
 
     test('rejects with additional errors messages as "others"', async () => {
-      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
-        others: [new Error(errors[1]?.message)],
-      });
+      await assert.rejects(
+        client().sendPushNotificationsAsync([]),
+        (e: any) => e.others[0].message === errors[1]?.message,
+      );
     });
   });
 
@@ -224,11 +221,11 @@ describe('sending push notification messages', () => {
         mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(429, { errors }).times(3);
       });
       test('rejects with the error message', async () => {
-        await expect(fastClient.sendPushNotificationsAsync([])).rejects.toThrow(message);
+        await assert.rejects(fastClient.sendPushNotificationsAsync([]), { message });
       });
 
       test('rejects with the error code', async () => {
-        await expect(fastClient.sendPushNotificationsAsync([])).rejects.toMatchObject({ code });
+        await assert.rejects(fastClient.sendPushNotificationsAsync([]), { code });
       });
     });
     describe('when the second retry succeeds', () => {
@@ -239,9 +236,10 @@ describe('sending push notification messages', () => {
         mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data });
       });
       test('resolves with the data response', async () => {
-        await expect(
-          fastClient.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]),
-        ).resolves.toEqual(data);
+        await assert.deepEqual(
+          await fastClient.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]),
+          data,
+        );
       });
     });
   });
@@ -253,7 +251,7 @@ describe('retrieving push notification receipts', () => {
     mockPool
       .intercept({ path: getReceiptsApiUrl, method: 'POST' })
       .reply(200, { data: mockReceipts });
-    await expect(client().getPushNotificationReceiptsAsync([])).resolves.toEqual(mockReceipts);
+    assert.deepEqual(await client().getPushNotificationReceiptsAsync([]), mockReceipts);
   });
 
   describe('if the response is not a map', () => {
@@ -263,19 +261,20 @@ describe('retrieving push notification receipts', () => {
       mockPool.intercept({ path: getReceiptsApiUrl, method: 'POST' }).reply(200, { data });
     });
     test('throws an error', async () => {
-      await expect(client().getPushNotificationReceiptsAsync([])).rejects.toThrow(
-        `Expected Expo to respond with a map`,
+      await assert.rejects(
+        client().getPushNotificationReceiptsAsync([]),
+        /Expected Expo to respond with a map/,
       );
     });
     test('rejects with the response', async () => {
-      await expect(client().getPushNotificationReceiptsAsync([])).rejects.toMatchObject({ data });
+      await assert.rejects(client().getPushNotificationReceiptsAsync([]), { data });
     });
   });
 });
 
 describe('chunking push notification messages', () => {
   test('defines the push notification chunk size', () => {
-    expect(ExpoClient.pushNotificationChunkSizeLimit).toBeDefined();
+    assert.ok(ExpoClient.pushNotificationChunkSizeLimit);
   });
 
   test('chunks lists of push notification messages', () => {
@@ -285,14 +284,14 @@ describe('chunking push notification messages', () => {
     for (const chunk of chunks) {
       totalMessageCount += chunk.length;
     }
-    expect(totalMessageCount).toBe(messages.length);
+    assert.equal(totalMessageCount, messages.length);
   });
 
   test('can chunk small lists of push notification messages', () => {
     const messages = new Array(10).fill({ to: '?' });
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(1);
-    expect(chunks[0]).toHaveLength(10);
+    assert.equal(chunks.length, 1);
+    assert.equal(chunks[0]?.length, 10);
   });
 
   test('chunks single push notification message with lists of recipients', () => {
@@ -302,10 +301,9 @@ describe('chunking push notification messages', () => {
     const chunks = client().chunkPushNotifications(messages);
     for (const chunk of chunks) {
       // Each chunk should only contain a single message with 100 recipients
-      expect(chunk).toHaveLength(1);
+      assert.equal(chunk.length, 1);
     }
-    const totalMessageCount = countAndValidateMessages(chunks);
-    expect(totalMessageCount).toBe(messagesLength);
+    assert.equal(countAndValidateMessages(chunks), messagesLength);
   });
 
   test('can chunk single push notification message with small lists of recipients', () => {
@@ -313,10 +311,10 @@ describe('chunking push notification messages', () => {
 
     const messages = [{ to: new Array(messagesLength).fill('?') }];
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(1);
-    expect(chunks[0]).toHaveLength(1);
+    assert.equal(chunks.length, 1);
+    assert.equal(chunks[0]?.length, 1);
     assert.ok(chunks[0]);
-    expect(chunks[0][0]?.to).toHaveLength(messagesLength);
+    assert.equal(chunks[0][0]?.to.length, messagesLength);
   });
 
   test('chunks push notification messages mixed with lists of recipients and single recipient', () => {
@@ -329,8 +327,7 @@ describe('chunking push notification messages', () => {
       ...new Array(10).fill({ to: '?' }),
     ];
     const chunks = client().chunkPushNotifications(messages);
-    const totalMessageCount = countAndValidateMessages(chunks);
-    expect(totalMessageCount).toBe(888 + 999 + 90 + 10);
+    assert.equal(countAndValidateMessages(chunks), 888 + 999 + 90 + 10);
   });
 });
 
@@ -338,74 +335,69 @@ describe('chunking a single push notification message with multiple recipients',
   test('one message with 100 recipients', () => {
     const messages = [{ to: new Array(100).fill('?') }];
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(1);
-    expect(chunks[0]).toHaveLength(1);
+    assert.equal(chunks.length, 1);
+    assert.equal(chunks[0]?.length, 1);
     assert.ok(chunks[0]);
-    expect(chunks[0][0]?.to).toHaveLength(100);
+    assert.equal(chunks[0][0]?.to.length, 100);
   });
 
   test('one message with 101 recipients', () => {
     const messages = [{ to: new Array(101).fill('?') }];
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(2);
-    expect(chunks[0]).toHaveLength(1);
-    expect(chunks[1]).toHaveLength(1);
-    const totalMessageCount = countAndValidateMessages(chunks);
-    expect(totalMessageCount).toBe(101);
+    assert.equal(chunks.length, 2);
+    assert.equal(chunks[0]?.length, 1);
+    assert.equal(chunks[1]?.length, 1);
+    assert.equal(countAndValidateMessages(chunks), 101);
   });
 
   test('one message with 99 recipients and two additional messages', () => {
     const messages = [{ to: new Array(99).fill('?') }, ...new Array(2).fill({ to: '?' })];
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(2);
-    expect(chunks[0]).toHaveLength(2);
-    expect(chunks[1]).toHaveLength(1);
-    const totalMessageCount = countAndValidateMessages(chunks);
-    expect(totalMessageCount).toBe(99 + 2);
+    assert.equal(chunks.length, 2);
+    assert.equal(chunks[0]?.length, 2);
+    assert.equal(chunks[1]?.length, 1);
+    assert.equal(countAndValidateMessages(chunks), 99 + 2);
   });
 
   test('one message with 100 recipients and two additional messages', () => {
     const messages = [{ to: new Array(100).fill('?') }, ...new Array(2).fill({ to: '?' })];
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(2);
-    expect(chunks[0]).toHaveLength(1);
-    expect(chunks[1]).toHaveLength(2);
-    const totalMessageCount = countAndValidateMessages(chunks);
-    expect(totalMessageCount).toBe(100 + 2);
+    assert.equal(chunks.length, 2);
+    assert.equal(chunks[0]?.length, 1);
+    assert.equal(chunks[1]?.length, 2);
+    assert.equal(countAndValidateMessages(chunks), 100 + 2);
   });
 
   test('99 messages and one additional message with with two recipients', () => {
     const messages = [...new Array(99).fill({ to: '?' }), { to: new Array(2).fill('?') }];
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(2);
-    expect(chunks[0]).toHaveLength(100);
-    expect(chunks[1]).toHaveLength(1);
-    const totalMessageCount = countAndValidateMessages(chunks);
-    expect(totalMessageCount).toBe(99 + 2);
+    assert.equal(chunks.length, 2);
+    assert.equal(chunks[0]?.length, 100);
+    assert.equal(chunks[1]?.length, 1);
+    assert.equal(countAndValidateMessages(chunks), 99 + 2);
   });
 
   test('no message', () => {
-    expect(client().chunkPushNotifications([])).toHaveLength(0);
+    assert.equal(client().chunkPushNotifications([]).length, 0);
   });
 
   test('one message with no recipient', () => {
-    expect(client().chunkPushNotifications([{ to: [] }])).toHaveLength(0);
+    assert.equal(client().chunkPushNotifications([{ to: [] }]).length, 0);
   });
 
   test('two messages and one additional message with no recipient', () => {
     const messages = [...new Array(2).fill({ to: '?' }), { to: [] }];
     const chunks = client().chunkPushNotifications(messages);
-    expect(chunks).toHaveLength(1);
+    assert.equal(chunks.length, 1);
     // The message with no recipient should be removed.
-    expect(chunks[0]).toHaveLength(2);
-    const totalMessageCount = countAndValidateMessages(chunks);
-    expect(totalMessageCount).toBe(2);
+    assert.equal(chunks[0]?.length, 2);
+    assert.equal(countAndValidateMessages(chunks), 2);
   });
 });
 
 describe('chunking push notification receipt IDs', () => {
   test('defines the push notification receipt ID chunk size', () => {
-    expect(ExpoClient.pushNotificationReceiptChunkSizeLimit).toBeDefined();
+    assert.ok(ExpoClient.pushNotificationReceiptChunkSizeLimit);
   });
 
   test('chunks lists of push notification receipt IDs', () => {
@@ -416,33 +408,35 @@ describe('chunking push notification receipt IDs', () => {
     for (const chunk of chunks) {
       totalReceiptIdCount += chunk.length;
     }
-    expect(totalReceiptIdCount).toBe(receiptIds.length);
+    assert.equal(totalReceiptIdCount, receiptIds.length);
   });
 });
 
 describe('.isExpoPushToken', () => {
   test('returns true for ExpoPushToken[.*]', () => {
-    expect(ExpoClient.isExpoPushToken('ExpoPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
+    assert.equal(ExpoClient.isExpoPushToken('ExpoPushToken[xxxxxxxxxxxxxxxxxxxxxx]'), true);
   });
   test('returns true for ExponentPushToken[.*]', () => {
-    expect(ExpoClient.isExpoPushToken('ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]')).toBe(true);
+    assert.equal(ExpoClient.isExpoPushToken('ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]'), true);
   });
   test('returns true for UUIDs', () => {
-    expect(ExpoClient.isExpoPushToken('F5741A13-BCDA-434B-A316-5DC0E6FFA94F')).toBe(true);
+    assert.equal(ExpoClient.isExpoPushToken('F5741A13-BCDA-434B-A316-5DC0E6FFA94F'), true);
   });
   test('returns false for FCM tokens', () => {
-    expect(
+    assert.equal(
       ExpoClient.isExpoPushToken(
         'dOKpuo4qbsM:APA91bHkSmF84ROx7Y-2eMGxc0lmpQeN33ZwDMG763dkjd8yjKK-rhPtiR1OoIWNG5ZshlL8oyxsTnQ5XtahyBNS9mJAvfeE6aHzv_mOF_Ve4vL2po4clMIYYV2-Iea_sZVJF7xFLXih4Y0y88JNYULxFfz-XXXXX',
       ),
-    ).toBe(false);
+      false,
+    );
   });
   test('returns false for APNS tokens', () => {
-    expect(
+    assert.equal(
       ExpoClient.isExpoPushToken(
         '5fa729c6e535eb568g18fdabd35785fc60f41c161d9d7cf4b0bbb0d92437fda0',
       ),
-    ).toBe(false);
+      false,
+    );
   });
 });
 
@@ -450,7 +444,7 @@ function countAndValidateMessages(chunks: ExpoPushMessage[][]): number {
   let totalMessageCount = 0;
   for (const chunk of chunks) {
     const chunkMessagesCount = ExpoClient._getActualMessageCount(chunk);
-    expect(chunkMessagesCount).toBeLessThanOrEqual(ExpoClient.pushNotificationChunkSizeLimit);
+    assert(chunkMessagesCount <= ExpoClient.pushNotificationChunkSizeLimit);
     totalMessageCount += chunkMessagesCount;
   }
   return totalMessageCount;
