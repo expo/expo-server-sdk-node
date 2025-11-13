@@ -1,5 +1,5 @@
 {
-  "extends": ["@tsconfig/strictest/tsconfig", "@tsconfig/node20/tsconfig"],
+  "extends": ["@tsconfig/strictest/tsconfig", "@tsconfig/node20/tsconfig", "@tsconfig/node-ts/tsconfig"],
   "compilerOptions": {
     "declaration": true,
     "noEmit": true,

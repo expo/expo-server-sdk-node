@@ -19,7 +19,8 @@ import {
   pushNotificationReceiptChunkLimit,
   requestRetryMinTimeout,
   sendApiUrl,
-} from './ExpoClientValues';
+} from './ExpoClientValues.ts';
+import packageJSON from '../package.json' with { type: 'json' };
 
 export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
@@ -204,7 +205,7 @@ export class Expo {
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
     let requestBody: string | Buffer | undefined;
 
-    const sdkVersion = require('../package.json').version;
+    const sdkVersion = packageJSON.version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
