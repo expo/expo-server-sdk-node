@@ -54,7 +54,7 @@
   "devDependencies": {
     "@tsconfig/node20": "20.1.6",
     "@tsconfig/strictest": "2.0.5",
-    "@types/node": "22.17.2",
+    "@types/node": "22.19.1",
     "@types/node-fetch": "2.6.12",
     "@types/promise-retry": "1.1.6",
     "eslint": "9.33.0",
