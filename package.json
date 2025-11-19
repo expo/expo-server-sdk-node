@@ -63,7 +63,7 @@
     "jiti": "2.4.2",
     "msw": "2.10.5",
     "prettier": "3.6.2",
-    "ts-jest": "29.4.1",
+    "ts-jest": "29.4.5",
     "typescript": "5.9.2"
   },
   "packageManager": "yarn@4.9.3"
