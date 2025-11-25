@@ -64,7 +64,7 @@
     "msw": "2.10.5",
     "prettier": "3.6.2",
     "ts-jest": "29.4.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.3"
   },
   "packageManager": "yarn@4.9.3"
 }
