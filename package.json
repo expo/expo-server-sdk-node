@@ -52,7 +52,7 @@
     "promise-retry": "^2.0.1"
   },
   "devDependencies": {
-    "@tsconfig/node20": "20.1.6",
+    "@tsconfig/node20": "20.1.8",
     "@tsconfig/strictest": "2.0.5",
     "@types/node": "22.17.2",
     "@types/node-fetch": "2.6.12",
