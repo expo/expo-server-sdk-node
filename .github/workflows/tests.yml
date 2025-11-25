@@ -2,44 +2,35 @@ name: Tests
 on:
   push:
 jobs:
-  typecheck:
+  static-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@v5
       - run: corepack enable
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@v6
         with:
           cache: yarn
       - run: yarn
       - run: yarn tsc
-      # This command builds, and then prints files which would be included in the published package
-      - run: yarn pack --dry-run
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-      - run: corepack enable
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version-file: package.json
-          cache: yarn
-      - run: yarn
       - run: yarn lint --max-warnings=0
+      # This command builds and then prints files which would be included in the published package
+      - run: yarn pack --dry-run
+
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [20, 22, 24]
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@v5
       - run: corepack enable
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: yarn
       - run: yarn
       - run: yarn test --coverage
-      - uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+      - uses: codecov/codecov-action@v5
         with:
           flags: 'node_${{ matrix.node-version }}'
         env:
