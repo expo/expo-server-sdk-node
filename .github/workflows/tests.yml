@@ -30,7 +30,7 @@ jobs:
           cache: yarn
       - run: yarn
       - run: yarn test --coverage
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           flags: 'node_${{ matrix.node-version }}'
         env:
