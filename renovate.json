@@ -1,7 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices", "helpers:pinGitHubActionDigestsToSemver"],
+  "extends": [
+    "config:best-practices",
+    ":pinOnlyDevDependencies",
+    "helpers:pinGitHubActionDigestsToSemver"
+  ],
   "labels": ["dependencies"],
+  "minimumReleaseAge": "30 days",
   "packageRules": [
     {
       "matchPackageNames": ["**node-fetch"],
