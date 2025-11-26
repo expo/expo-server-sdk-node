@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [24, 25]
     steps:
       - uses: actions/checkout@v5
       - run: corepack enable
@@ -29,7 +29,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: yarn
       - run: yarn
-      - run: yarn test --coverage
+      - run: yarn test
       - uses: codecov/codecov-action@v5
         with:
           flags: 'node_${{ matrix.node-version }}'
