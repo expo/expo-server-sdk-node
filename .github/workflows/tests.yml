@@ -1,37 +1,22 @@
 name: Tests
 on:
   push:
+env:
+  # renovate datasource=github-releases depName=jdx/mise
+  MISE_VERSION: 'v2025.11.8'
 jobs:
-  static-checks:
-    runs-on: ubuntu-latest
+  tests:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
-      - run: corepack enable
+      - uses: actions/checkout@v5
+      - uses: jdx/mise-action@v3.5.1
+        with:
+          version: ${{ env.MISE_VERSION }}
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           cache: yarn
-      - run: yarn
-      - run: yarn tsc
-      - run: yarn lint --max-warnings=0
-      # This command builds and then prints files which would be included in the published package
-      - run: yarn pack --dry-run
-
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20, 22, 24]
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
-      - run: corepack enable
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: yarn
-      - run: yarn
-      - run: yarn test --coverage
+      - run: mise run ci
       - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
-        with:
-          flags: 'node_${{ matrix.node-version }}'
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

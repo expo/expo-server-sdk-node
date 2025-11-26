@@ -4,6 +4,9 @@ on:
     branches:
       - main
 name: release-please
+env:
+  # renovate datasource=github-releases depName=jdx/mise
+  MISE_VERSION: 'v2025.11.7'
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -17,12 +20,14 @@ jobs:
         # these if statements ensure that a publication only occurs when
         # a new release is created:
         if: ${{ steps.release.outputs.release_created }}
+      - uses: jdx/mise-action@v3.5.1
+        with:
+          version: ${{ env.MISE_VERSION }}
+        if: ${{ steps.release.outputs.release_created }}
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: '22'
+          cache: yarn
           registry-url: 'https://registry.npmjs.org'
-        if: ${{ steps.release.outputs.release_created }}
-      - run: corepack enable
         if: ${{ steps.release.outputs.release_created }}
       - run: yarn --immutable
         if: ${{ steps.release.outputs.release_created }}

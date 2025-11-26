@@ -14,9 +14,8 @@
     "build": "yarn prepack",
     "lint": "eslint",
     "prepack": "tsc --project tsconfig.build.json",
-    "test": "jest",
-    "tsc": "tsc",
-    "watch": "tsc --watch"
+    "test": "jest --coverage",
+    "tsc": "tsc"
   },
   "jest": {
     "coverageDirectory": "<rootDir>/../coverage",
