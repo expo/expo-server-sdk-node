@@ -8,6 +8,7 @@
 import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
 import assert from 'node:assert';
 import { Agent } from 'node:http';
+import { createRequire } from 'node:module';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
@@ -19,7 +20,9 @@ import {
   pushNotificationReceiptChunkLimit,
   requestRetryMinTimeout,
   sendApiUrl,
-} from './ExpoClientValues';
+} from './ExpoClientValues.ts';
+
+const require = createRequire(import.meta.url);
 
 export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
@@ -204,6 +207,9 @@ export class Expo {
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
     let requestBody: string | Buffer | undefined;
 
+    // NOTE: This can be replaced with an import with the `{ type: "json" }`
+    // attribute when we drop support for node versions below v20.10.0, when
+    // import attributes were stabilized
     const sdkVersion = require('../package.json').version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
