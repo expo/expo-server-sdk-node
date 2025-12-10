@@ -1,12 +1,22 @@
 # adapted from https://github.com/googleapis/release-please-action#automating-publication-to-npm
+name: release-please
+
 on:
   push:
     branches:
       - main
-name: release-please
 env:
   # renovate datasource=github-releases depName=jdx/mise
   MISE_VERSION: 'v2025.11.7'
+
+# `id-token` for publishing: https://docs.npmjs.com/trusted-publishers#github-actions-configuration
+# the rest for release-please: https://github.com/googleapis/release-please-action#basic-configuration
+permissions:
+  id-token: write # Required for kOIDC
+  contents: write # Required by release-please to create a release
+  pull-requests: write # Required by release-please to open a release PR
+  issues: write # Required by release-please to comment on release-related issues
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -31,7 +41,6 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
       - run: yarn --immutable
         if: ${{ steps.release.outputs.release_created }}
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - run: |
+          yarn npm publish --provenance
         if: ${{ steps.release.outputs.release_created }}
