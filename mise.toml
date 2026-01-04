@@ -1,0 +1,35 @@
+[tools]
+node = "24.11.0"
+
+[hooks]
+postinstall = [
+  "npx corepack enable", # corepack installs stubs for yarn
+  "yarn install",
+]
+
+[tasks.yarn]
+run = "yarn install --immutable"
+
+[tasks."checks:types"]
+depends = ["yarn"]
+run = "node --run tsc"
+
+[tasks."checks:publish"]
+description = "This runs the prepack script, building the js files, then prints all file which would be included in the published package"
+depends = ["yarn"]
+run = "yarn npm publish --dry-run"
+
+[tasks."checks:test"]
+depends = ["yarn"]
+run = "node --run test"
+
+[tasks."checks:lint"]
+depends = ["yarn"]
+run = "node --run lint -- --max-warnings=0"
+
+[tasks.ci]
+description = "Run all checks"
+run = [ { tasks = ["checks:*"] } ]
+
+[settings]
+experimental = true

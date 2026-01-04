@@ -146,11 +146,17 @@ let receiptIdChunks = expo.chunkPushNotificationReceiptIds(receiptIds);
 
 ## Developing
 
-The source code is in the `src/` directory and babel is used to turn it into ES5 that goes in the `build/` directory.
+The `mise.toml` file lets you run the full CI pipeline with [mise](https://mise.jdx.dev) and the command `mise run ci`.  Each task in the pipeline can also be run separately.
 
-To build, `yarn build`.
+`mise install` or `mise en .` will also install tools for your current interactive shell, including [yarn](https://yarnpkg.com/).
 
-To build and watch for changes, `yarn watch`.
+Scripts in the `package.json` file can be run with either `yarn <name>` or `node --run <name>`.
+
+The source code is in the `src/` directory and the build output is emitted in the `build/` directory.  To build, run `yarn build`.
+
+To typecheck continuously, run `yarn tsc --watch`.
+
+To run tests, run `yarn test`.
 
 ## See Also
 

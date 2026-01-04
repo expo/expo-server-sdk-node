@@ -1,32 +1,46 @@
 # adapted from https://github.com/googleapis/release-please-action#automating-publication-to-npm
+name: release-please
+
 on:
   push:
     branches:
       - main
-name: release-please
+env:
+  # renovate datasource=github-releases depName=jdx/mise
+  MISE_VERSION: 'v2025.11.7'
+
+# `id-token` for publishing: https://docs.npmjs.com/trusted-publishers#github-actions-configuration
+# the rest for release-please: https://github.com/googleapis/release-please-action#basic-configuration
+permissions:
+  id-token: write # Required for kOIDC
+  contents: write # Required by release-please to create a release
+  pull-requests: write # Required by release-please to open a release PR
+  issues: write # Required by release-please to comment on release-related issues
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4
+      - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
         id: release
         with:
           release-type: node
       # The logic below handles the npm publication:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         # these if statements ensure that a publication only occurs when
         # a new release is created:
         if: ${{ steps.release.outputs.release_created }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: jdx/mise-action@v3.5.1
         with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          version: ${{ env.MISE_VERSION }}
         if: ${{ steps.release.outputs.release_created }}
-      - run: corepack enable
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+        with:
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
         if: ${{ steps.release.outputs.release_created }}
       - run: yarn --immutable
         if: ${{ steps.release.outputs.release_created }}
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - run: |
+          yarn npm publish --provenance
         if: ${{ steps.release.outputs.release_created }}
