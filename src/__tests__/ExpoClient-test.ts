@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, test } from '@jest/globals';
 import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
@@ -16,24 +16,29 @@ const validationError = {
   statusCode: 400,
 };
 
+let mockAgent: MockAgent;
+
+beforeEach(() => {
+  mockAgent = new MockAgent();
+  mockAgent.disableNetConnect();
+  setGlobalDispatcher(mockAgent);
+});
+
+afterEach(async () => {
+  await mockAgent.close();
+});
+
 describe('sending push notification messages', () => {
   test('resolves with the data from the server response', async () => {
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
 
     await expect(client().sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(
       mockTickets,
     );
-    await mockAgent.close();
   });
 
   test('throws an error if the bearer token is invalid', async () => {
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool
       .intercept({ path: sendApiUrl, method: 'POST' })
@@ -42,14 +47,10 @@ describe('sending push notification messages', () => {
     await expect(client().sendPushNotificationsAsync([{ to: 'one' }])).rejects.toThrow(
       'The bearer token is invalid',
     );
-    await mockAgent.close();
   });
 
   describe('the useFcmV1 option', () => {
     test('omits the parameter when set to true', async () => {
-      const mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
       const mockPool = mockAgent.get(apiBaseUrl);
       mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, (opts) => {
         const url = new URL(opts.path, apiBaseUrl);
@@ -60,13 +61,9 @@ describe('sending push notification messages', () => {
       await expect(
         client({ useFcmV1: true }).sendPushNotificationsAsync([{ to: '' }]),
       ).resolves.toEqual(mockTickets);
-      await mockAgent.close();
     });
 
     test('throws an error when set to false', async () => {
-      const mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
       const mockPool = mockAgent.get(apiBaseUrl);
       mockPool
         .intercept({ path: sendApiUrl, method: 'POST', query: { useFcmV1: 'false' } })
@@ -74,7 +71,6 @@ describe('sending push notification messages', () => {
       await expect(
         client({ useFcmV1: false }).sendPushNotificationsAsync([{ to: '' }]),
       ).rejects.toThrow();
-      await mockAgent.close();
     });
   });
 
@@ -83,9 +79,6 @@ describe('sending push notification messages', () => {
     const messageLength = JSON.stringify(messages).length;
     expect(messageLength).toBeGreaterThan(1024);
 
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool
       .intercept({
@@ -102,13 +95,22 @@ describe('sending push notification messages', () => {
       .reply(200, { data: mockTickets });
 
     await expect(client().sendPushNotificationsAsync(messages)).resolves.toEqual(mockTickets);
-    await mockAgent.close();
   });
 
+  test('uses the httpAgent when provided', async () => {
+    const httpAgent = new MockAgent();
+    httpAgent.disableNetConnect();
+    setGlobalDispatcher(httpAgent);
+    const mockPool = httpAgent.get(apiBaseUrl);
+    mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
+
+    const clientWithAgent = client({ httpAgent });
+    await expect(clientWithAgent.sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(
+      mockTickets,
+    );
+    await httpAgent.close();
+  });
   test(`throws an error when the number of tickets doesn't match the number of messages`, async () => {
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: [{}, {}] });
 
@@ -121,17 +123,12 @@ describe('sending push notification messages', () => {
     await expect(client().sendPushNotificationsAsync(Array(3).fill({ to: 'a' }))).rejects.toThrow(
       `Expected Expo to respond with 3 tickets but got 2`,
     );
-    await mockAgent.close();
   });
 
   describe('200 response with well-formed API errors', () => {
     const code = 'TEST_API_ERROR';
     const message = 'This is a test error';
-    let mockAgent: MockAgent;
     beforeEach(() => {
-      mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
       const mockPool = mockAgent.get(apiBaseUrl);
       mockPool
         .intercept({ path: sendApiUrl, method: 'POST' })
@@ -147,9 +144,6 @@ describe('sending push notification messages', () => {
   });
 
   test('handles 200 HTTP responses with malformed JSON', async () => {
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool
       .intercept({ path: sendApiUrl, method: 'POST' })
@@ -158,17 +152,12 @@ describe('sending push notification messages', () => {
     await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
-    await mockAgent.close();
   });
 
   describe('non-200 response with well-formed API errors', () => {
     const code = 'TEST_API_ERROR';
     const message = 'This is a test error';
-    let mockAgent: MockAgent;
     beforeEach(() => {
-      mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
       const mockPool = mockAgent.get(apiBaseUrl);
       mockPool
         .intercept({ path: sendApiUrl, method: 'POST' })
@@ -184,22 +173,15 @@ describe('sending push notification messages', () => {
   });
 
   test('handles non-200 HTTP responses with arbitrary JSON', async () => {
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(400, { clowntown: true });
 
     await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
-    await mockAgent.close();
   });
 
   test('handles non-200 HTTP responses with arbitrary text', async () => {
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool
       .intercept({ path: sendApiUrl, method: 'POST' })
@@ -208,7 +190,6 @@ describe('sending push notification messages', () => {
     await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
-    await mockAgent.close();
   });
 
   describe('well-formed API responses with multiple errors and extra details', () => {
@@ -226,11 +207,7 @@ describe('sending push notification messages', () => {
         message: `This is another error`,
       },
     ];
-    let mockAgent: MockAgent;
     beforeEach(() => {
-      mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
       const mockPool = mockAgent.get(apiBaseUrl);
       mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(400, { errors });
     });
@@ -269,35 +246,28 @@ describe('sending push notification messages', () => {
     const message = 'Rate limit exceeded';
     const errors = [{ code, message }];
     const fastClient = client({ retryMinTimeout: 1 });
-    let mockAgent: MockAgent;
-    beforeEach(() => {
-      mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
-    });
 
     describe('when all retries fail', () => {
-      test('rejects with the error message', async () => {
+      beforeEach(() => {
         const mockPool = mockAgent.get(apiBaseUrl);
         mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(429, { errors }).times(3);
-
+      });
+      test('rejects with the error message', async () => {
         await expect(fastClient.sendPushNotificationsAsync([])).rejects.toThrow(message);
       });
 
       test('rejects with the error code', async () => {
-        const mockPool = mockAgent.get(apiBaseUrl);
-        mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(429, { errors }).times(3);
-
         await expect(fastClient.sendPushNotificationsAsync([])).rejects.toMatchObject({ code });
       });
     });
     describe('when the second retry succeeds', () => {
       const data = ['one', 'another'];
-      test('resolves with the data response', async () => {
+      beforeEach(() => {
         const mockPool = mockAgent.get(apiBaseUrl);
         mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(429, { errors });
         mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data });
-
+      });
+      test('resolves with the data response', async () => {
         await expect(
           fastClient.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]),
         ).resolves.toEqual(data);
@@ -308,40 +278,26 @@ describe('sending push notification messages', () => {
 
 describe('retrieving push notification receipts', () => {
   test('resolves with the data response from the Expo API server', async () => {
-    const mockAgent = new MockAgent();
-    mockAgent.disableNetConnect();
-    setGlobalDispatcher(mockAgent);
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool
       .intercept({ path: getReceiptsApiUrl, method: 'POST' })
       .reply(200, { data: mockReceipts });
     await expect(client().getPushNotificationReceiptsAsync([])).resolves.toEqual(mockReceipts);
-    await mockAgent.close();
   });
 
   describe('if the response is not a map', () => {
     const data = [{ status: 'ok' }];
-    test('throws an error', async () => {
-      const mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
+    beforeEach(() => {
       const mockPool = mockAgent.get(apiBaseUrl);
       mockPool.intercept({ path: getReceiptsApiUrl, method: 'POST' }).reply(200, { data });
-
+    });
+    test('throws an error', async () => {
       await expect(client().getPushNotificationReceiptsAsync([])).rejects.toThrow(
         `Expected Expo to respond with a map`,
       );
-      await mockAgent.close();
     });
     test('rejects with the response', async () => {
-      const mockAgent = new MockAgent();
-      mockAgent.disableNetConnect();
-      setGlobalDispatcher(mockAgent);
-      const mockPool = mockAgent.get(apiBaseUrl);
-      mockPool.intercept({ path: getReceiptsApiUrl, method: 'POST' }).reply(200, { data });
-
       await expect(client().getPushNotificationReceiptsAsync([])).rejects.toMatchObject({ data });
-      await mockAgent.close();
     });
   });
 });
