@@ -1006,6 +1006,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/promise-retry@npm:1.1.6":
+  version: 1.1.6
+  resolution: "@types/promise-retry@npm:1.1.6"
+  dependencies:
+    "@types/retry": "npm:*"
+  checksum: 10c0/5af69d393b2d776c2303c590e58617d9a3af4381c410eb461dae6d52eb9e42fe976b061a7f2c6439a5cf55a7a20d04da277f4806ffb8c931aaf6875c10917def
+  languageName: node
+  linkType: hard
+
+"@types/retry@npm:*":
+  version: 0.12.5
+  resolution: "@types/retry@npm:0.12.5"
+  checksum: 10c0/eaaca483cc62f2f02c0b8486847ee70986ca7f97afd7363037247dbe3e98df8bd56a5b50d58b1e96768a5a1be0307010d86e9991bd458d72e8df88be471bd720
+  languageName: node
+  linkType: hard
+
 "@types/stack-utils@npm:^2.0.0":
   version: 2.0.3
   resolution: "@types/stack-utils@npm:2.0.3"
@@ -2515,9 +2531,11 @@ __metadata:
     "@tsconfig/node20": "npm:20.1.8"
     "@tsconfig/strictest": "npm:2.0.5"
     "@types/node": "npm:24.10.1"
+    "@types/promise-retry": "npm:1.1.6"
     eslint: "npm:9.33.0"
     eslint-config-universe: "npm:15.0.3"
     jest: "npm:29.7.0"
+    jiti: "npm:^2.4.2"
     prettier: "npm:3.7.4"
     promise-limit: "npm:^2.7.0"
     promise-retry: "npm:^2.0.1"
@@ -3879,6 +3897,15 @@ __metadata:
   bin:
     jest: bin/jest.js
   checksum: 10c0/f40eb8171cf147c617cc6ada49d062fbb03b4da666cb8d39cdbfb739a7d75eea4c3ca150fb072d0d273dce0c753db4d0467d54906ad0293f59c54f9db4a09d8b
+  languageName: node
+  linkType: hard
+
+"jiti@npm:^2.4.2":
+  version: 2.6.1
+  resolution: "jiti@npm:2.6.1"
+  bin:
+    jiti: lib/jiti-cli.mjs
+  checksum: 10c0/79b2e96a8e623f66c1b703b98ec1b8be4500e1d217e09b09e343471bbb9c105381b83edbb979d01cef18318cc45ce6e153571b6c83122170eefa531c64b6789b
   languageName: node
   linkType: hard
 
