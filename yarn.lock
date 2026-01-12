@@ -1040,17 +1040,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node20@npm:20.1.8":
-  version: 20.1.8
-  resolution: "@tsconfig/node20@npm:20.1.8"
-  checksum: 10c0/5a9fcc0234e639c26f36f01d5912a59c47964361e9b9a8981a10806553799441f929474aed71cdec0ce5464ad1d757698df1651ac94cd55bb6bc01601a6003ea
-  languageName: node
-  linkType: hard
-
-"@tsconfig/strictest@npm:2.0.5":
-  version: 2.0.5
-  resolution: "@tsconfig/strictest@npm:2.0.5"
-  checksum: 10c0/cfc86da2d57f7b4b0827701b132c37a4974284e5c40649656c0e474866dfd8a69f57c6718230d8a8139967e2a95438586b8224c13ab0ff9d3a43eda771c50cc4
+"@tsconfig/bases@npm:^1.0.16":
+  version: 1.0.16
+  resolution: "@tsconfig/bases@npm:1.0.16"
+  checksum: 10c0/16fff7404ea3c89517806ab202f7d6edf3f523c0ac77e23e1cc0af8caf57173b4f12a3fc1c38d87152c0aebc1cfd2adecd65afa08a6688430a49b08390062011
   languageName: node
   linkType: hard
 
@@ -2804,8 +2797,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "expo-server-sdk@workspace:."
   dependencies:
-    "@tsconfig/node20": "npm:20.1.8"
-    "@tsconfig/strictest": "npm:2.0.5"
+    "@tsconfig/bases": "npm:^1.0.16"
     "@types/node": "npm:24.10.1"
     "@types/node-fetch": "npm:2.6.12"
     "@types/promise-retry": "npm:1.1.6"
