@@ -51,8 +51,7 @@
     "promise-retry": "^2.0.1"
   },
   "devDependencies": {
-    "@tsconfig/node20": "20.1.8",
-    "@tsconfig/strictest": "2.0.5",
+    "@tsconfig/bases": "^1.0.16",
     "@types/node": "24.10.1",
     "@types/node-fetch": "2.6.12",
     "@types/promise-retry": "1.1.6",
