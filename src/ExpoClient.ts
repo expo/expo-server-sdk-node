@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
-import { fetch, Agent, Response } from 'undici';
+import { fetch, Agent, Response, RequestInit } from 'undici';
 
 import {
   defaultConcurrentRequestLimit,
@@ -226,19 +226,9 @@ export class Expo {
       requestHeaders.set('Content-Type', 'application/json');
     }
 
-    const headersRecord: Record<string, string> = {};
-    requestHeaders.forEach((value, key) => {
-      headersRecord[key] = value;
-    });
-
-    const fetchOptions: {
-      method: 'get' | 'post';
-      headers: Record<string, string>;
-      body?: string | Buffer;
-      dispatcher?: Agent;
-    } = {
+    const fetchOptions: RequestInit = {
       method: options.httpMethod,
-      headers: headersRecord,
+      headers: requestHeaders,
     };
 
     if (requestBody) {
