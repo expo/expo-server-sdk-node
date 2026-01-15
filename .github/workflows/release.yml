@@ -34,7 +34,7 @@ jobs:
         with:
           version: ${{ env.MISE_VERSION }}
         if: ${{ steps.release.outputs.release_created }}
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           cache: yarn
           registry-url: 'https://registry.npmjs.org'
