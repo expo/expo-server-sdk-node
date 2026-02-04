@@ -880,7 +880,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/bases@npm:^1.0.16":
+"@tsconfig/bases@npm:1.0.16":
   version: 1.0.16
   resolution: "@tsconfig/bases@npm:1.0.16"
   checksum: 10c0/16fff7404ea3c89517806ab202f7d6edf3f523c0ac77e23e1cc0af8caf57173b4f12a3fc1c38d87152c0aebc1cfd2adecd65afa08a6688430a49b08390062011
@@ -2522,13 +2522,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "expo-server-sdk@workspace:."
   dependencies:
-    "@tsconfig/bases": "npm:^1.0.16"
+    "@tsconfig/bases": "npm:1.0.16"
     "@types/node": "npm:24.10.1"
     "@types/promise-retry": "npm:1.1.6"
     eslint: "npm:9.39.2"
     eslint-config-universe: "npm:15.0.3"
     jest: "npm:29.7.0"
-    jiti: "npm:^2.4.2"
+    jiti: "npm:2.6.1"
     prettier: "npm:3.7.4"
     promise-limit: "npm:^2.7.0"
     promise-retry: "npm:^2.0.1"
@@ -3893,7 +3893,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jiti@npm:^2.4.2":
+"jiti@npm:2.6.1":
   version: 2.6.1
   resolution: "jiti@npm:2.6.1"
   bin:

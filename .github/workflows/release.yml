@@ -30,7 +30,7 @@ jobs:
         # these if statements ensure that a publication only occurs when
         # a new release is created:
         if: ${{ steps.release.outputs.release_created }}
-      - uses: jdx/mise-action@v3.5.1
+      - uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3.5.1
         with:
           version: ${{ env.MISE_VERSION }}
         if: ${{ steps.release.outputs.release_created }}
