@@ -196,11 +196,15 @@ export class Expo {
   }
 
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
+    const json = JSON.stringify(options.body);
+    assert(json != null, `JSON request body must not be null`);
+
     const sdkVersion = require('../package.json').version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
+      'Content-Type': 'application/json',
     });
     if (this.accessToken) {
       requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
@@ -211,17 +215,11 @@ export class Expo {
       headers: requestHeaders,
     };
 
-    if (options.body != null) {
-      const json = JSON.stringify(options.body);
-      assert(json != null, `JSON request body must not be null`);
-      if (options.shouldCompress(json)) {
-        fetchOptions.body = gzipSync(Buffer.from(json));
-        requestHeaders.set('Content-Encoding', 'gzip');
-      } else {
-        fetchOptions.body = json;
-      }
-
-      requestHeaders.set('Content-Type', 'application/json');
+    if (options.shouldCompress(json)) {
+      fetchOptions.body = gzipSync(Buffer.from(json));
+      requestHeaders.set('Content-Encoding', 'gzip');
+    } else {
+      fetchOptions.body = json;
     }
 
     if (this.httpAgent) {
@@ -408,7 +406,7 @@ export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post';
-  body?: ExpoPushMessage[] | { ids: string[] };
+  body: ExpoPushMessage[] | { ids: string[] };
   shouldCompress: (body: string) => boolean;
 };
 
