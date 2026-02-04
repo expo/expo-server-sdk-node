@@ -1,116 +1,125 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
-import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
+import { afterEach, beforeEach, describe, expect, test } from '@jest/globals';
 import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
+import { MockAgent, setGlobalDispatcher } from 'undici';
 
 import ExpoClient, { ExpoPushMessage } from '../ExpoClient';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues';
 
+const apiBaseUrl = 'https://exp.host';
 const accessToken = 'foobar';
 const mockTickets = [{ status: 'ok', id: randomUUID() }];
 const mockReceipts = {};
-const validationError = HttpResponse.json(
-  { errors: [{ code: 'VALIDATION_ERROR' }] },
-  { status: 400 },
-);
+const validationError = {
+  body: { errors: [{ code: 'VALIDATION_ERROR' }] },
+  statusCode: 400,
+};
 
-const server = setupServer(
-  http.post(sendApiUrl, async ({ request }) => {
-    // The `useFcmV1` parameter can now only be true or absent
-    const url = new URL(request.url);
-    switch (url.searchParams.get('useFcmV1')) {
-      case 'true':
-        break;
-      case null:
-        break;
-      default:
-        return validationError;
-    }
-    if (request.headers.get('Content-Type') !== 'application/json') {
-      return validationError;
-    }
-    if (request.headers.get('Authorization') !== `Bearer ${accessToken}`) {
-      return HttpResponse.json(
-        { error: 'invalid_token', error_description: 'The bearer token is invalid' },
-        { status: 401 },
-      );
-    }
-    let body;
-    if (request.headers.get('Content-Encoding') === 'gzip') {
-      body = JSON.parse(gunzipSync(await request.arrayBuffer()).toString());
-    } else {
-      body = await request.json();
-    }
+let mockAgent: MockAgent;
 
-    if (typeof body != 'object') {
-      return HttpResponse.text('Not Found', { status: 404 });
-    }
-    if (!body || !(body['to'] || Array.isArray(body))) {
-      return validationError;
-    }
-
-    return HttpResponse.json({ data: mockTickets });
-  }),
-  http.post(getReceiptsApiUrl, async ({ request }) => {
-    if (request.headers.get('Content-Type') !== 'application/json') {
-      return validationError;
-    }
-    const body = await request.json();
-
-    if (typeof body != 'object') {
-      return HttpResponse.text('Not Found', { status: 404 });
-    }
-    if (!body || !(body['ids'] || Array.isArray(body))) {
-      return validationError;
-    }
-    return HttpResponse.json({ data: mockReceipts });
-  }),
-);
-
-beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' });
+beforeEach(() => {
+  mockAgent = new MockAgent();
+  mockAgent.disableNetConnect();
+  setGlobalDispatcher(mockAgent);
 });
 
-afterAll(() => {
-  server.close();
-});
-
-afterEach(() => {
-  server.resetHandlers();
+afterEach(async () => {
+  await mockAgent.close();
 });
 
 describe('sending push notification messages', () => {
-  test('resolves with the data from the server response', () =>
-    expect(client().sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(mockTickets));
+  test('resolves with the data from the server response', async () => {
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
 
-  describe('the useFcmV1 option', () => {
-    test('omits the parameter when set to true', () =>
-      expect(client({ useFcmV1: true }).sendPushNotificationsAsync([{ to: '' }])).resolves.toEqual(
-        mockTickets,
-      ));
-
-    test('includes the parameter when set to false', () =>
-      expect(
-        client({ useFcmV1: false }).sendPushNotificationsAsync([{ to: '' }]),
-      ).rejects.toThrow());
+    await expect(client().sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(
+      mockTickets,
+    );
   });
 
-  test('compresses request bodies over 1 KiB', () => {
+  test('throws an error if the bearer token is invalid', async () => {
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool
+      .intercept({ path: sendApiUrl, method: 'POST' })
+      .reply(401, { error: 'invalid_token', error_description: 'The bearer token is invalid' });
+
+    await expect(client().sendPushNotificationsAsync([{ to: 'one' }])).rejects.toThrow(
+      'The bearer token is invalid',
+    );
+  });
+
+  describe('the useFcmV1 option', () => {
+    test('omits the parameter when set to true', async () => {
+      const mockPool = mockAgent.get(apiBaseUrl);
+      mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, (opts) => {
+        const url = new URL(opts.path, apiBaseUrl);
+        expect(url.searchParams.has('useFcmV1')).toBe(false);
+        return { data: mockTickets };
+      });
+
+      await expect(
+        client({ useFcmV1: true }).sendPushNotificationsAsync([{ to: '' }]),
+      ).resolves.toEqual(mockTickets);
+    });
+
+    test('throws an error when set to false', async () => {
+      const mockPool = mockAgent.get(apiBaseUrl);
+      mockPool
+        .intercept({ path: sendApiUrl, method: 'POST', query: { useFcmV1: 'false' } })
+        .reply(validationError.statusCode, validationError.body);
+      await expect(
+        client({ useFcmV1: false }).sendPushNotificationsAsync([{ to: '' }]),
+      ).rejects.toThrow();
+    });
+  });
+
+  test('compresses request bodies over 1 KiB', async () => {
     const messages = [{ to: 'a', body: new Array(1500).join('?') }];
     const messageLength = JSON.stringify(messages).length;
     expect(messageLength).toBeGreaterThan(1024);
 
-    return expect(client().sendPushNotificationsAsync(messages)).resolves.toEqual(mockTickets);
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool
+      .intercept({
+        path: sendApiUrl,
+        method: 'POST',
+        headers: {
+          'Content-Encoding': 'gzip',
+        },
+        body: (body) => {
+          const uncompressed = gunzipSync(Buffer.from(body, 'hex')).toString();
+          return uncompressed === JSON.stringify(messages);
+        },
+      })
+      .reply(200, { data: mockTickets });
+
+    await expect(client().sendPushNotificationsAsync(messages)).resolves.toEqual(mockTickets);
   });
 
+  test('uses the httpAgent when provided', async () => {
+    const httpAgent = new MockAgent();
+    httpAgent.disableNetConnect();
+    setGlobalDispatcher(httpAgent);
+    const mockPool = httpAgent.get(apiBaseUrl);
+    mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
+
+    const clientWithAgent = client({ httpAgent });
+    await expect(clientWithAgent.sendPushNotificationsAsync([{ to: 'one' }])).resolves.toEqual(
+      mockTickets,
+    );
+    await httpAgent.close();
+  });
   test(`throws an error when the number of tickets doesn't match the number of messages`, async () => {
-    server.use(http.post(sendApiUrl, () => HttpResponse.json({ data: Array(2) })));
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: [{}, {}] });
 
     await expect(client().sendPushNotificationsAsync([{ to: 'a' }])).rejects.toThrow(
       `Expected Expo to respond with 1 ticket but got 2`,
     );
+
+    mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: [{}, {}] });
+
     await expect(client().sendPushNotificationsAsync(Array(3).fill({ to: 'a' }))).rejects.toThrow(
       `Expected Expo to respond with 3 tickets but got 2`,
     );
@@ -120,18 +129,25 @@ describe('sending push notification messages', () => {
     const code = 'TEST_API_ERROR';
     const message = 'This is a test error';
     beforeEach(() => {
-      server.use(http.post(sendApiUrl, () => HttpResponse.json({ errors: [{ code, message }] })));
+      const mockPool = mockAgent.get(apiBaseUrl);
+      mockPool
+        .intercept({ path: sendApiUrl, method: 'POST' })
+        .reply(200, { errors: [{ code, message }] });
     });
-    test('rejects with the error message', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message));
-    test('rejects with the error code', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code }));
+
+    test('rejects with the error message', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message);
+    });
+    test('rejects with the error code', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code });
+    });
   });
 
   test('handles 200 HTTP responses with malformed JSON', async () => {
-    server.use(
-      http.post(sendApiUrl, () => HttpResponse.text('<!DOCTYPE html><body>Not JSON</body>')),
-    );
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool
+      .intercept({ path: sendApiUrl, method: 'POST' })
+      .reply(200, '<!DOCTYPE html><body>Not JSON</body>');
 
     await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
@@ -142,36 +158,36 @@ describe('sending push notification messages', () => {
     const code = 'TEST_API_ERROR';
     const message = 'This is a test error';
     beforeEach(() => {
-      server.use(
-        http.post(sendApiUrl, () =>
-          HttpResponse.json({ errors: [{ code, message }] }, { status: 400 }),
-        ),
-      );
+      const mockPool = mockAgent.get(apiBaseUrl);
+      mockPool
+        .intercept({ path: sendApiUrl, method: 'POST' })
+        .reply(400, { errors: [{ code, message }] });
     });
-    test('rejects with the error message', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message));
-    test('rejects with the error code', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code }));
+
+    test('rejects with the error message', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(message);
+    });
+    test('rejects with the error code', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({ code });
+    });
   });
 
-  test('handles non-200 HTTP responses with arbitrary JSON', () => {
-    server.use(
-      http.post(sendApiUrl, () => HttpResponse.json({ clowntown: true }, { status: 400 })),
-    );
+  test('handles non-200 HTTP responses with arbitrary JSON', async () => {
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(400, { clowntown: true });
 
-    return expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
+    await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
 
-  test('handles non-200 HTTP responses with arbitrary text', () => {
-    server.use(
-      http.post(sendApiUrl, () =>
-        HttpResponse.text('<!DOCTYPE html><body>Not JSON</body>', { status: 400 }),
-      ),
-    );
+  test('handles non-200 HTTP responses with arbitrary text', async () => {
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool
+      .intercept({ path: sendApiUrl, method: 'POST' })
+      .reply(400, '<!DOCTYPE html><body>Not JSON</body>');
 
-    return expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
+    await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(
       `Expo responded with an error`,
     );
   });
@@ -192,31 +208,37 @@ describe('sending push notification messages', () => {
       },
     ];
     beforeEach(() => {
-      server.use(http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 400 })));
+      const mockPool = mockAgent.get(apiBaseUrl);
+      mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(400, { errors });
     });
 
-    test("throws the first error's message", () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toThrow(errors[0]?.message));
+    test("throws the first error's message", async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toThrow(errors[0]?.message);
+    });
 
-    test('rejects with the code of the first error', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+    test('rejects with the code of the first error', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
         code: errors[0]?.code,
-      }));
+      });
+    });
 
-    test('rejects with the details of the first error', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+    test('rejects with the details of the first error', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
         details: errors[0]?.details,
-      }));
+      });
+    });
 
-    test('rejects with the stack of the the first error as "serverStack"', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+    test('rejects with the stack of the the first error as "serverStack"', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
         serverStack: errors[0]?.stack,
-      }));
+      });
+    });
 
-    test('rejects with additional errors messages as "others"', () =>
-      expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
-        others: [Error(errors[1]?.message)],
-      }));
+    test('rejects with additional errors messages as "others"', async () => {
+      await expect(client().sendPushNotificationsAsync([])).rejects.toMatchObject({
+        others: [new Error(errors[1]?.message)],
+      });
+    });
   });
 
   describe('429 Too Many Requests', () => {
@@ -227,68 +249,56 @@ describe('sending push notification messages', () => {
 
     describe('when all retries fail', () => {
       beforeEach(() => {
-        server.use(
-          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
-            once: true,
-          }),
-        );
-        server.use(
-          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
-            once: true,
-          }),
-        );
-        server.use(
-          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
-            once: true,
-          }),
-        );
+        const mockPool = mockAgent.get(apiBaseUrl);
+        mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(429, { errors }).times(3);
+      });
+      test('rejects with the error message', async () => {
+        await expect(fastClient.sendPushNotificationsAsync([])).rejects.toThrow(message);
       });
 
-      test('rejects with the error message', () =>
-        expect(fastClient.sendPushNotificationsAsync([])).rejects.toThrow(message));
-
-      test('rejects with the error code', () =>
-        expect(fastClient.sendPushNotificationsAsync([])).rejects.toMatchObject({ code }));
+      test('rejects with the error code', async () => {
+        await expect(fastClient.sendPushNotificationsAsync([])).rejects.toMatchObject({ code });
+      });
     });
     describe('when the second retry succeeds', () => {
       const data = ['one', 'another'];
       beforeEach(() => {
-        server.use(
-          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
-            once: true,
-          }),
-        );
-        server.use(
-          http.post(sendApiUrl, () => HttpResponse.json({ errors }, { status: 429 }), {
-            once: true,
-          }),
-        );
-        server.use(http.post(sendApiUrl, () => HttpResponse.json({ data }), { once: true }));
+        const mockPool = mockAgent.get(apiBaseUrl);
+        mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(429, { errors });
+        mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data });
       });
-      test('resolves with the data response', () =>
-        expect(fastClient.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }])).resolves.toEqual(
-          data,
-        ));
+      test('resolves with the data response', async () => {
+        await expect(
+          fastClient.sendPushNotificationsAsync([{ to: 'a' }, { to: 'b' }]),
+        ).resolves.toEqual(data);
+      });
     });
   });
 });
 
 describe('retrieving push notification receipts', () => {
-  test('resolves with the data response from the Expo API server', () => {
-    return expect(client().getPushNotificationReceiptsAsync([])).resolves.toEqual(mockReceipts);
+  test('resolves with the data response from the Expo API server', async () => {
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool
+      .intercept({ path: getReceiptsApiUrl, method: 'POST' })
+      .reply(200, { data: mockReceipts });
+    await expect(client().getPushNotificationReceiptsAsync([])).resolves.toEqual(mockReceipts);
   });
 
   describe('if the response is not a map', () => {
     const data = [{ status: 'ok' }];
     beforeEach(() => {
-      server.use(http.post(getReceiptsApiUrl, () => HttpResponse.json({ data })));
+      const mockPool = mockAgent.get(apiBaseUrl);
+      mockPool.intercept({ path: getReceiptsApiUrl, method: 'POST' }).reply(200, { data });
     });
-    test('throws an error', () =>
-      expect(client().getPushNotificationReceiptsAsync([])).rejects.toThrow(
+    test('throws an error', async () => {
+      await expect(client().getPushNotificationReceiptsAsync([])).rejects.toThrow(
         `Expected Expo to respond with a map`,
-      ));
-    test('rejects with the response', () =>
-      expect(client().getPushNotificationReceiptsAsync([])).rejects.toMatchObject({ data }));
+      );
+    });
+    test('rejects with the response', async () => {
+      await expect(client().getPushNotificationReceiptsAsync([])).rejects.toMatchObject({ data });
+    });
   });
 });
 

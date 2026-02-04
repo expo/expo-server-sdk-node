@@ -5,12 +5,12 @@
  * Application Services
  * https://expo.dev
  */
-import fetch, { Headers, Response as FetchResponse } from 'node-fetch';
 import assert from 'node:assert';
-import { Agent } from 'node:http';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
+import { fetch } from 'undici';
+import type { Dispatcher, Response, RequestInit } from 'undici';
 
 import {
   defaultConcurrentRequestLimit,
@@ -25,7 +25,7 @@ export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
   static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
 
-  private httpAgent: Agent | undefined;
+  private httpAgent: Dispatcher | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
   private useFcmV1: boolean | undefined;
@@ -202,8 +202,6 @@ export class Expo {
   }
 
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
-    let requestBody: string | Buffer | undefined;
-
     const sdkVersion = require('../package.json').version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
@@ -214,25 +212,29 @@ export class Expo {
       requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
     }
 
+    const fetchOptions: RequestInit = {
+      method: options.httpMethod,
+      headers: requestHeaders,
+    };
+
     if (options.body != null) {
       const json = JSON.stringify(options.body);
       assert(json != null, `JSON request body must not be null`);
       if (options.shouldCompress(json)) {
-        requestBody = gzipSync(Buffer.from(json));
+        fetchOptions.body = gzipSync(Buffer.from(json));
         requestHeaders.set('Content-Encoding', 'gzip');
       } else {
-        requestBody = json;
+        fetchOptions.body = json;
       }
 
       requestHeaders.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(url, {
-      method: options.httpMethod,
-      body: requestBody,
-      headers: requestHeaders,
-      agent: this.httpAgent,
-    });
+    if (this.httpAgent) {
+      fetchOptions.dispatcher = this.httpAgent;
+    }
+
+    const response = await fetch(url, fetchOptions);
 
     if (response.status !== 200) {
       const apiError = await this.parseErrorResponseAsync(response);
@@ -257,7 +259,7 @@ export class Expo {
     return result.data;
   }
 
-  private async parseErrorResponseAsync(response: FetchResponse): Promise<Error> {
+  private async parseErrorResponseAsync(response: Response): Promise<Error> {
     const textBody = await response.text();
     let result: ApiResult;
     try {
@@ -275,7 +277,7 @@ export class Expo {
     return this.getErrorFromResult(response, result);
   }
 
-  private async getTextResponseErrorAsync(response: FetchResponse, text: string): Promise<Error> {
+  private async getTextResponseErrorAsync(response: Response, text: string): Promise<Error> {
     const apiError: ExtensibleError = new Error(
       `Expo responded with an error with status code ${response.status}: ` + text,
     );
@@ -288,7 +290,7 @@ export class Expo {
    * Returns an error for the first API error in the result, with an optional `others` field that
    * contains any other errors.
    */
-  private getErrorFromResult(response: FetchResponse, result: ApiResult): Error {
+  private getErrorFromResult(response: Response, result: ApiResult): Error {
     const noErrorsMessage = `Expected at least one error from Expo`;
     assert(result.errors, noErrorsMessage);
     const [errorData, ...otherErrorData] = result.errors;
@@ -334,7 +336,7 @@ export class Expo {
 export default Expo;
 
 export type ExpoClientOptions = {
-  httpAgent: Agent;
+  httpAgent: Dispatcher;
   maxConcurrentRequests: number;
   retryMinTimeout: number;
   accessToken: string;
@@ -413,7 +415,7 @@ export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post';
-  body?: any;
+  body?: ExpoPushMessage[] | { ids: string[] };
   shouldCompress: (body: string) => boolean;
 };
 

@@ -1,6 +1,8 @@
 name: Tests
 on:
   push:
+  pull_request:
+  workflow_dispatch:
 env:
   # renovate datasource=github-releases depName=jdx/mise
   MISE_VERSION: 'v2025.11.8'
