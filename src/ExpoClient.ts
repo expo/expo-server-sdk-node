@@ -28,7 +28,6 @@ export class Expo {
   private httpAgent: Dispatcher | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
-  private useFcmV1: boolean | undefined;
   private retryMinTimeout: number;
 
   constructor(options: Partial<ExpoClientOptions> = {}) {
@@ -38,7 +37,6 @@ export class Expo {
     );
     this.retryMinTimeout = options.retryMinTimeout ?? requestRetryMinTimeout;
     this.accessToken = options.accessToken;
-    this.useFcmV1 = options.useFcmV1;
   }
 
   /**
@@ -66,10 +64,6 @@ export class Expo {
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     const url = new URL(sendApiUrl);
-    // Only append the useFcmV1 option if the option is set to false
-    if (this.useFcmV1 === false) {
-      url.searchParams.append('useFcmV1', String(this.useFcmV1));
-    }
     const actualMessagesCount = Expo._getActualMessageCount(messages);
     const data = await this.limitConcurrentRequests(async () => {
       return await promiseRetry(
@@ -202,11 +196,15 @@ export class Expo {
   }
 
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
+    const json = JSON.stringify(options.body);
+    assert(json != null, `JSON request body must not be null`);
+
     const sdkVersion = require('../package.json').version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
       'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
+      'Content-Type': 'application/json',
     });
     if (this.accessToken) {
       requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
@@ -217,17 +215,11 @@ export class Expo {
       headers: requestHeaders,
     };
 
-    if (options.body != null) {
-      const json = JSON.stringify(options.body);
-      assert(json != null, `JSON request body must not be null`);
-      if (options.shouldCompress(json)) {
-        fetchOptions.body = gzipSync(Buffer.from(json));
-        requestHeaders.set('Content-Encoding', 'gzip');
-      } else {
-        fetchOptions.body = json;
-      }
-
-      requestHeaders.set('Content-Type', 'application/json');
+    if (options.shouldCompress(json)) {
+      fetchOptions.body = gzipSync(Buffer.from(json));
+      requestHeaders.set('Content-Encoding', 'gzip');
+    } else {
+      fetchOptions.body = json;
     }
 
     if (this.httpAgent) {
@@ -340,7 +332,6 @@ export type ExpoClientOptions = {
   maxConcurrentRequests: number;
   retryMinTimeout: number;
   accessToken: string;
-  useFcmV1: boolean;
 };
 
 export type ExpoPushToken = string;
@@ -415,7 +406,7 @@ export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post';
-  body?: ExpoPushMessage[] | { ids: string[] };
+  body: ExpoPushMessage[] | { ids: string[] };
   shouldCompress: (body: string) => boolean;
 };
 

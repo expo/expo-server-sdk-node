@@ -11,10 +11,6 @@ const apiBaseUrl = 'https://exp.host';
 const accessToken = 'foobar';
 const mockTickets = [{ status: 'ok', id: randomUUID() }];
 const mockReceipts = {};
-const validationError = {
-  body: { errors: [{ code: 'VALIDATION_ERROR' }] },
-  statusCode: 400,
-};
 
 let mockAgent: MockAgent;
 
@@ -47,31 +43,6 @@ describe('sending push notification messages', () => {
     await expect(client().sendPushNotificationsAsync([{ to: 'one' }])).rejects.toThrow(
       'The bearer token is invalid',
     );
-  });
-
-  describe('the useFcmV1 option', () => {
-    test('omits the parameter when set to true', async () => {
-      const mockPool = mockAgent.get(apiBaseUrl);
-      mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, (opts) => {
-        const url = new URL(opts.path, apiBaseUrl);
-        expect(url.searchParams.has('useFcmV1')).toBe(false);
-        return { data: mockTickets };
-      });
-
-      await expect(
-        client({ useFcmV1: true }).sendPushNotificationsAsync([{ to: '' }]),
-      ).resolves.toEqual(mockTickets);
-    });
-
-    test('throws an error when set to false', async () => {
-      const mockPool = mockAgent.get(apiBaseUrl);
-      mockPool
-        .intercept({ path: sendApiUrl, method: 'POST', query: { useFcmV1: 'false' } })
-        .reply(validationError.statusCode, validationError.body);
-      await expect(
-        client({ useFcmV1: false }).sendPushNotificationsAsync([{ to: '' }]),
-      ).rejects.toThrow();
-    });
   });
 
   test('compresses request bodies over 1 KiB', async () => {
