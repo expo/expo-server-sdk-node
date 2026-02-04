@@ -9,7 +9,8 @@ import assert from 'node:assert';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
-import { fetch, Agent, Response, RequestInit } from 'undici';
+import { fetch } from 'undici';
+import type { Dispatcher, Response, RequestInit } from 'undici';
 
 import {
   defaultConcurrentRequestLimit,
@@ -24,7 +25,7 @@ export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
   static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
 
-  private httpAgent: Agent | undefined;
+  private httpAgent: Dispatcher | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
   private useFcmV1: boolean | undefined;
@@ -201,8 +202,6 @@ export class Expo {
   }
 
   private async requestAsync(url: string, options: RequestOptions): Promise<any> {
-    let requestBody: string | Buffer | undefined;
-
     const sdkVersion = require('../package.json').version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
@@ -213,26 +212,22 @@ export class Expo {
       requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
     }
 
-    if (options.body != null) {
-      const json = JSON.stringify(options.body);
-      assert(json != null, `JSON request body must not be null`);
-      if (options.shouldCompress(json)) {
-        requestBody = gzipSync(Buffer.from(json));
-        requestHeaders.set('Content-Encoding', 'gzip');
-      } else {
-        requestBody = json;
-      }
-
-      requestHeaders.set('Content-Type', 'application/json');
-    }
-
     const fetchOptions: RequestInit = {
       method: options.httpMethod,
       headers: requestHeaders,
     };
 
-    if (requestBody) {
-      fetchOptions.body = requestBody;
+    if (options.body != null) {
+      const json = JSON.stringify(options.body);
+      assert(json != null, `JSON request body must not be null`);
+      if (options.shouldCompress(json)) {
+        fetchOptions.body = gzipSync(Buffer.from(json));
+        requestHeaders.set('Content-Encoding', 'gzip');
+      } else {
+        fetchOptions.body = json;
+      }
+
+      requestHeaders.set('Content-Type', 'application/json');
     }
 
     if (this.httpAgent) {
@@ -341,7 +336,7 @@ export class Expo {
 export default Expo;
 
 export type ExpoClientOptions = {
-  httpAgent: Agent;
+  httpAgent: Dispatcher;
   maxConcurrentRequests: number;
   retryMinTimeout: number;
   accessToken: string;
@@ -420,7 +415,7 @@ export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post';
-  body?: any;
+  body?: ExpoPushMessage[] | { ids: string[] };
   shouldCompress: (body: string) => boolean;
 };
 
