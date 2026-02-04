@@ -28,7 +28,6 @@ export class Expo {
   private httpAgent: Dispatcher | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
-  private useFcmV1: boolean | undefined;
   private retryMinTimeout: number;
 
   constructor(options: Partial<ExpoClientOptions> = {}) {
@@ -38,7 +37,6 @@ export class Expo {
     );
     this.retryMinTimeout = options.retryMinTimeout ?? requestRetryMinTimeout;
     this.accessToken = options.accessToken;
-    this.useFcmV1 = options.useFcmV1;
   }
 
   /**
@@ -66,10 +64,6 @@ export class Expo {
    */
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     const url = new URL(sendApiUrl);
-    // Only append the useFcmV1 option if the option is set to false
-    if (this.useFcmV1 === false) {
-      url.searchParams.append('useFcmV1', String(this.useFcmV1));
-    }
     const actualMessagesCount = Expo._getActualMessageCount(messages);
     const data = await this.limitConcurrentRequests(async () => {
       return await promiseRetry(
@@ -340,7 +334,6 @@ export type ExpoClientOptions = {
   maxConcurrentRequests: number;
   retryMinTimeout: number;
   accessToken: string;
-  useFcmV1: boolean;
 };
 
 export type ExpoPushToken = string;
