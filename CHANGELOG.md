@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.0.0](https://github.com/expo/expo-server-sdk-node/compare/v4.0.0...v5.0.0) (2026-02-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove useFcmV1 option ([#261](https://github.com/expo/expo-server-sdk-node/issues/261))
+* replace node-fetch with undici ([#116](https://github.com/expo/expo-server-sdk-node/issues/116))
+
+### Features
+
+* remove useFcmV1 option ([#261](https://github.com/expo/expo-server-sdk-node/issues/261)) ([55761dd](https://github.com/expo/expo-server-sdk-node/commit/55761dd8b33b633c8f7182861ac0af4bc797a536))
+* replace node-fetch with undici ([#116](https://github.com/expo/expo-server-sdk-node/issues/116)) ([413290b](https://github.com/expo/expo-server-sdk-node/commit/413290bdad010c48af44829afca8aa23b73e7dc7))
+
 ## [4.0.0](https://github.com/expo/expo-server-sdk-node/compare/v3.15.0...v4.0.0) (2025-08-18)
 
 
