@@ -10,6 +10,8 @@ If you have problems with the code in this repository, please file issues & bug 
 yarn add expo-server-sdk
 ```
 
+Request payload format is documented [here](https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format).
+
 ```ts
 // Create a new Expo SDK client
 // optionally provide an access token if you have enabled push security
