@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0](https://github.com/expo/expo-server-sdk-node/compare/v5.0.0...v6.0.0) (2026-02-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Build as ECMAScript module
+
+### Miscellaneous Chores
+
+* Build as ECMAScript module ([04dcceb](https://github.com/expo/expo-server-sdk-node/commit/04dcceb50c7c16534da13ebbdd90fff79c7fecf0))
+
 ## [5.0.0](https://github.com/expo/expo-server-sdk-node/compare/v4.0.0...v5.0.0) (2026-02-04)
 
 
