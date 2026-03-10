@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.0](https://github.com/expo/expo-server-sdk-node/compare/v6.0.0...v6.1.0) (2026-03-10)
+
+
+### Features
+
+* new push notification collapsing options ([#266](https://github.com/expo/expo-server-sdk-node/issues/266)) ([d22c73d](https://github.com/expo/expo-server-sdk-node/commit/d22c73dd58b1e532b64d6c10d9dac14399854777))
+
 ## [6.0.0](https://github.com/expo/expo-server-sdk-node/compare/v5.0.0...v6.0.0) (2026-02-19)
 
 
