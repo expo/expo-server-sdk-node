@@ -369,6 +369,8 @@ export type ExpoPushMessage = {
   };
   categoryId?: string;
   mutableContent?: boolean;
+  collapseId?: string;
+  tag?: string;
   _contentAvailable?: boolean;
 };
 
