@@ -5,11 +5,5 @@
     "customManagers:githubActionsVersions",
     "helpers:pinGitHubActionDigestsToSemver"
   ],
-  "labels": ["dependencies"],
-  "packageRules": [
-    {
-      "matchPackageNames": ["**node-fetch"],
-      "enabled": false
-    }
-  ]
+  "labels": ["dependencies"]
 }
