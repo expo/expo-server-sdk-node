@@ -36,8 +36,8 @@ const messages = targetPushTokens.map((pushToken) => {
     richContent: {
       image: 'https://example.com/statics/some-image-here-if-you-want.jpg'
     },
-  })
-}
+  }
+})
 
 // The Expo push notification service accepts batches of notifications so
 // that you don't need to send 1000 requests to send 1000 notifications. We
