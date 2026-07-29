@@ -24,6 +24,23 @@ import {
 
 const require = createRequire(import.meta.url);
 
+// NOTE: This can be replaced with an import with the `{ type: "json" }`
+// attribute when we drop support for node versions below v20.10.0, when
+// import attributes were stabilized
+const sdkVersion = readSdkVersion();
+
+function readSdkVersion(): string {
+  // Bundlers (Metro's server export, esbuild, rolldown, …) inline this module into an output file
+  // elsewhere on disk, so the relative path either doesn't resolve at all or resolves to the
+  // consuming app's manifest. Neither is worth throwing over, or reporting as our version.
+  try {
+    const packageJson = require('../package.json');
+    return packageJson.name === 'expo-server-sdk' ? packageJson.version : 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
   static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
@@ -202,10 +219,6 @@ export class Expo {
     const json = JSON.stringify(options.body);
     assert(json != null, `JSON request body must not be null`);
 
-    // NOTE: This can be replaced with an import with the `{ type: "json" }`
-    // attribute when we drop support for node versions below v20.10.0, when
-    // import attributes were stabilized
-    const sdkVersion = require('../package.json').version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',

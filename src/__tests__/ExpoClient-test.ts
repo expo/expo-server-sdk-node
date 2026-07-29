@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { afterEach, beforeEach, describe, test } from 'node:test';
 import { gunzipSync } from 'node:zlib';
 import { MockAgent, setGlobalDispatcher } from 'undici';
 
 import ExpoClient, { type ExpoPushMessage } from '../ExpoClient.ts';
 import { getReceiptsApiUrl, sendApiUrl } from '../ExpoClientValues.ts';
+
+const require = createRequire(import.meta.url);
 
 const apiBaseUrl = 'https://exp.host';
 const accessToken = 'foobar';
@@ -28,6 +31,22 @@ describe('sending push notification messages', () => {
   test('resolves with the data from the server response', async () => {
     const mockPool = mockAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
+
+    assert.deepEqual(await client().sendPushNotificationsAsync([{ to: 'one' }]), mockTickets);
+  });
+
+  test('sends the SDK version in the User-Agent header', async () => {
+    const { version } = require('../../package.json');
+    const mockPool = mockAgent.get(apiBaseUrl);
+    mockPool
+      .intercept({
+        path: sendApiUrl,
+        method: 'POST',
+        headers: {
+          'User-Agent': `expo-server-sdk-node/${version}`,
+        },
+      })
+      .reply(200, { data: mockTickets });
 
     assert.deepEqual(await client().sendPushNotificationsAsync([{ to: 'one' }]), mockTickets);
   });
