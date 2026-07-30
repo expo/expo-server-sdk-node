@@ -1,7 +1,7 @@
 {
   "extends": [
     "@tsconfig/bases/strictest",
-    "@tsconfig/bases/node20", // The minimum supported major node version
+    "@tsconfig/bases/node22", // The minimum supported major node version
     "@tsconfig/bases/node-ts"
   ],
   "compilerOptions": {
