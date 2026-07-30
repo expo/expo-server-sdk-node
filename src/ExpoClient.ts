@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
-import { fetch } from 'undici';
+import { fetch, Headers } from 'undici';
 import type { Dispatcher, Response, RequestInit } from 'undici';
 
 import packageJson from '../package.json' with { type: 'json' };
