@@ -12,9 +12,6 @@ import promiseRetry from 'promise-retry';
 import { fetch } from 'undici';
 import type { Dispatcher, Response, RequestInit } from 'undici';
 
-// Static so bundlers resolve the manifest at build time and inline the version; a runtime
-// require resolved against whatever directory the bundle ended up in instead.
-// https://github.com/expo/expo/issues/46129
 import packageJson from '../package.json' with { type: 'json' };
 import {
   defaultConcurrentRequestLimit,
