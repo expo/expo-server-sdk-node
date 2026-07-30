@@ -6,13 +6,13 @@
  * https://expo.dev
  */
 import assert from 'node:assert';
-import { createRequire } from 'node:module';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
 import { fetch } from 'undici';
 import type { Dispatcher, Response, RequestInit } from 'undici';
 
+import packageJson from '../package.json' with { type: 'json' };
 import {
   defaultConcurrentRequestLimit,
   getReceiptsApiUrl,
@@ -21,8 +21,6 @@ import {
   requestRetryMinTimeout,
   sendApiUrl,
 } from './ExpoClientValues.ts';
-
-const require = createRequire(import.meta.url);
 
 export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
@@ -202,14 +200,10 @@ export class Expo {
     const json = JSON.stringify(options.body);
     assert(json != null, `JSON request body must not be null`);
 
-    // NOTE: This can be replaced with an import with the `{ type: "json" }`
-    // attribute when we drop support for node versions below v20.10.0, when
-    // import attributes were stabilized
-    const sdkVersion = require('../package.json').version;
     const requestHeaders = new Headers({
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate',
-      'User-Agent': `expo-server-sdk-node/${sdkVersion}`,
+      'User-Agent': `expo-server-sdk-node/${packageJson.version}`,
       'Content-Type': 'application/json',
     });
     if (this.accessToken) {
