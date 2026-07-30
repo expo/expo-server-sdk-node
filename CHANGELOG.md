@@ -1,5 +1,16 @@
 # Changelog
 
+## [7.0.0](https://github.com/expo/expo-server-sdk-node/compare/v6.1.0...v7.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* Node v20.x, v21.x and v22.x below v22.12.0 are no longer supported.
+
+### Bug Fixes
+
+* read the SDK version with a JSON import instead of require ([#277](https://github.com/expo/expo-server-sdk-node/issues/277)) ([70f01a0](https://github.com/expo/expo-server-sdk-node/commit/70f01a05ac9dd15a712b710f4079f9f955c9eea9))
+
 ## [6.1.0](https://github.com/expo/expo-server-sdk-node/compare/v6.0.0...v6.1.0) (2026-03-10)
 
 
