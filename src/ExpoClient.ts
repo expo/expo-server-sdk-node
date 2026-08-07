@@ -336,7 +336,10 @@ export type ExpoClientOptions = {
 
 export type ExpoPushToken = string;
 
-// see "Message request format" at https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
+/**
+ * Each field is documented under "Message request format" at
+ * https://docs.expo.dev/push-notifications/sending-notifications/#message-request-format
+ */
 export type ExpoPushMessage = {
   to: ExpoPushToken | ExpoPushToken[];
   data?: Record<string, unknown>;
@@ -365,6 +368,11 @@ export type ExpoPushMessage = {
   mutableContent?: boolean;
   collapseId?: string;
   tag?: string;
+  threadId?: string;
+  contentAvailable?: boolean;
+  /**
+   * @deprecated Use `contentAvailable` instead.
+   */
   _contentAvailable?: boolean;
 };
 
