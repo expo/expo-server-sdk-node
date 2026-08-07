@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.0](https://github.com/expo/expo-server-sdk-node/compare/v7.0.0...v7.1.0) (2026-08-07)
+
+
+### Features
+
+* add threadId parameter, deprecate _contentAvailable in favor of contentAvailable ([#281](https://github.com/expo/expo-server-sdk-node/issues/281)) ([82156a6](https://github.com/expo/expo-server-sdk-node/commit/82156a656344ccb19b434317c2ee52bac146cdc5))
+
 ## [7.0.0](https://github.com/expo/expo-server-sdk-node/compare/v6.1.0...v7.0.0) (2026-07-30)
 
 
