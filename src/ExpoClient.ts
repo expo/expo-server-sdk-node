@@ -369,6 +369,9 @@ export type ExpoPushMessage = {
   collapseId?: string;
   tag?: string;
   threadId?: string;
+  targetContentId?: string;
+  relevanceScore?: number;
+  filterCriteria?: string;
   contentAvailable?: boolean;
   /**
    * @deprecated Use `contentAvailable` instead.
