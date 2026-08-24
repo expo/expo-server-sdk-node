@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.2.0](https://github.com/expo/expo-server-sdk-node/compare/v7.1.0...v7.2.0) (2026-08-21)
+
+
+### Features
+
+* add new apns supported fields ([#284](https://github.com/expo/expo-server-sdk-node/issues/284)) ([a31cb42](https://github.com/expo/expo-server-sdk-node/commit/a31cb42295d67f93dc4111e976347deb1fe25083))
+
 ## [7.1.0](https://github.com/expo/expo-server-sdk-node/compare/v7.0.0...v7.1.0) (2026-08-07)
 
 
