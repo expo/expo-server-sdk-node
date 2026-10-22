@@ -24,7 +24,7 @@ export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
   static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
 
-  private httpAgent: object | undefined;
+  private httpAgent: HttpDispatcher | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
   private retryMinTimeout: number;
@@ -221,7 +221,7 @@ export class Expo {
     }
 
     if (this.httpAgent) {
-      (fetchOptions as { dispatcher?: object }).dispatcher = this.httpAgent;
+      (fetchOptions as { dispatcher?: HttpDispatcher }).dispatcher = this.httpAgent;
     }
 
     const response = await fetch(url, fetchOptions);
@@ -325,8 +325,12 @@ export class Expo {
 
 export default Expo;
 
+export interface HttpDispatcher {
+  dispatch(options: object, handler: object): boolean;
+}
+
 export type ExpoClientOptions = {
-  httpAgent: object;
+  httpAgent: HttpDispatcher;
   maxConcurrentRequests: number;
   retryMinTimeout: number;
   accessToken: string;
