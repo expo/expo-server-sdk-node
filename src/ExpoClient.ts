@@ -9,8 +9,6 @@ import assert from 'node:assert';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
-import { fetch, Headers } from 'undici';
-import type { Dispatcher, Response, RequestInit } from 'undici';
 
 import packageJson from '../package.json' with { type: 'json' };
 import {
@@ -26,7 +24,7 @@ export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
   static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
 
-  private httpAgent: Dispatcher | undefined;
+  private httpAgent: HttpDispatcher | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
   private retryMinTimeout: number;
@@ -210,23 +208,17 @@ export class Expo {
       requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
     }
 
-    const fetchOptions: RequestInit = {
+    const compress = options.shouldCompress(json);
+    if (compress) {
+      requestHeaders.set('Content-Encoding', 'gzip');
+    }
+
+    const response = await fetch(url, {
       method: options.httpMethod,
       headers: requestHeaders,
-    };
-
-    if (options.shouldCompress(json)) {
-      fetchOptions.body = gzipSync(Buffer.from(json));
-      requestHeaders.set('Content-Encoding', 'gzip');
-    } else {
-      fetchOptions.body = json;
-    }
-
-    if (this.httpAgent) {
-      fetchOptions.dispatcher = this.httpAgent;
-    }
-
-    const response = await fetch(url, fetchOptions);
+      body: compress ? gzipSync(Buffer.from(json)) : json,
+      ...(this.httpAgent && { dispatcher: this.httpAgent as Dispatcher }),
+    });
 
     if (response.status !== 200) {
       const apiError = await this.parseErrorResponseAsync(response);
@@ -327,8 +319,17 @@ export class Expo {
 
 export default Expo;
 
+/**
+ * The part of an undici `Dispatcher` that `fetch` uses. Pass an `Agent`, `ProxyAgent` or
+ * similar from the `undici` package. The client passes it to `fetch` as the `dispatcher`
+ * option, which only Node.js honors. Other runtimes ignore it.
+ */
+export interface HttpDispatcher {
+  dispatch(options: object, handler: object): boolean;
+}
+
 export type ExpoClientOptions = {
-  httpAgent: Dispatcher;
+  httpAgent: HttpDispatcher;
   maxConcurrentRequests: number;
   retryMinTimeout: number;
   accessToken: string;
@@ -416,6 +417,8 @@ export type ExpoPushErrorReceipt = {
 };
 
 export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
+
+type Dispatcher = NonNullable<RequestInit['dispatcher']>;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post';
