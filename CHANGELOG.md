@@ -1,5 +1,16 @@
 # Changelog
 
+## [8.0.0](https://github.com/expo/expo-server-sdk-node/compare/v7.2.0...v8.0.0) (2026-10-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* use the global fetch instead of undici's ([#289](https://github.com/expo/expo-server-sdk-node/issues/289))
+
+### Features
+
+* use the global fetch instead of undici's ([#289](https://github.com/expo/expo-server-sdk-node/issues/289)) ([e1bca00](https://github.com/expo/expo-server-sdk-node/commit/e1bca006d5ed86b80dede0e828bffd026c89f1f4))
+
 ## [7.2.0](https://github.com/expo/expo-server-sdk-node/compare/v7.1.0...v7.2.0) (2026-08-21)
 
 
