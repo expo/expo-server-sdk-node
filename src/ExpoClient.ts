@@ -325,6 +325,11 @@ export class Expo {
 
 export default Expo;
 
+/**
+ * The part of an undici `Dispatcher` that `fetch` uses. Pass an `Agent`, `ProxyAgent` or
+ * similar from the `undici` package. The client passes it to `fetch` as the `dispatcher`
+ * option, which only Node.js honors. Other runtimes ignore it.
+ */
 export interface HttpDispatcher {
   dispatch(options: object, handler: object): boolean;
 }
