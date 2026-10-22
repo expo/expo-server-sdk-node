@@ -208,23 +208,17 @@ export class Expo {
       requestHeaders.set('Authorization', `Bearer ${this.accessToken}`);
     }
 
-    const fetchOptions: RequestInit = {
+    const compress = options.shouldCompress(json);
+    if (compress) {
+      requestHeaders.set('Content-Encoding', 'gzip');
+    }
+
+    const response = await fetch(url, {
       method: options.httpMethod,
       headers: requestHeaders,
-    };
-
-    if (options.shouldCompress(json)) {
-      fetchOptions.body = gzipSync(Buffer.from(json));
-      requestHeaders.set('Content-Encoding', 'gzip');
-    } else {
-      fetchOptions.body = json;
-    }
-
-    if (this.httpAgent) {
-      (fetchOptions as { dispatcher?: HttpDispatcher }).dispatcher = this.httpAgent;
-    }
-
-    const response = await fetch(url, fetchOptions);
+      body: compress ? gzipSync(Buffer.from(json)) : json,
+      ...(this.httpAgent && { dispatcher: this.httpAgent as Dispatcher }),
+    });
 
     if (response.status !== 200) {
       const apiError = await this.parseErrorResponseAsync(response);
@@ -423,6 +417,8 @@ export type ExpoPushErrorReceipt = {
 };
 
 export type ExpoPushReceipt = ExpoPushSuccessReceipt | ExpoPushErrorReceipt;
+
+type Dispatcher = NonNullable<RequestInit['dispatcher']>;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post';
