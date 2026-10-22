@@ -86,7 +86,6 @@ describe('sending push notification messages', () => {
   test('uses the httpAgent when provided', async () => {
     const httpAgent = new MockAgent();
     httpAgent.disableNetConnect();
-    setGlobalDispatcher(httpAgent);
     const mockPool = httpAgent.get(apiBaseUrl);
     mockPool.intercept({ path: sendApiUrl, method: 'POST' }).reply(200, { data: mockTickets });
 

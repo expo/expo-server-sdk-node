@@ -9,8 +9,7 @@ import assert from 'node:assert';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
-import { fetch, Headers } from 'undici';
-import type { Dispatcher, Response, RequestInit } from 'undici';
+import type { Dispatcher } from 'undici-types';
 
 import packageJson from '../package.json' with { type: 'json' };
 import {
@@ -328,6 +327,10 @@ export class Expo {
 export default Expo;
 
 export type ExpoClientOptions = {
+  /**
+   * An undici `Dispatcher` (for example `new Agent()` from the `undici` package), passed to the
+   * global `fetch` as its `dispatcher` option. Only Node.js honors it.
+   */
   httpAgent: Dispatcher;
   maxConcurrentRequests: number;
   retryMinTimeout: number;
