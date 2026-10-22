@@ -9,7 +9,6 @@ import assert from 'node:assert';
 import { gzipSync } from 'node:zlib';
 import promiseLimit from 'promise-limit';
 import promiseRetry from 'promise-retry';
-import type { Dispatcher } from 'undici-types';
 
 import packageJson from '../package.json' with { type: 'json' };
 import {
@@ -25,7 +24,7 @@ export class Expo {
   static pushNotificationChunkSizeLimit = pushNotificationChunkLimit;
   static pushNotificationReceiptChunkSizeLimit = pushNotificationReceiptChunkLimit;
 
-  private httpAgent: Dispatcher | undefined;
+  private httpAgent: object | undefined;
   private limitConcurrentRequests: <T>(thunk: () => Promise<T>) => Promise<T>;
   private accessToken: string | undefined;
   private retryMinTimeout: number;
@@ -222,7 +221,7 @@ export class Expo {
     }
 
     if (this.httpAgent) {
-      fetchOptions.dispatcher = this.httpAgent;
+      (fetchOptions as { dispatcher?: object }).dispatcher = this.httpAgent;
     }
 
     const response = await fetch(url, fetchOptions);
@@ -327,11 +326,7 @@ export class Expo {
 export default Expo;
 
 export type ExpoClientOptions = {
-  /**
-   * An undici `Dispatcher` (for example `new Agent()` from the `undici` package), passed to the
-   * global `fetch` as its `dispatcher` option. Only Node.js honors it.
-   */
-  httpAgent: Dispatcher;
+  httpAgent: object;
   maxConcurrentRequests: number;
   retryMinTimeout: number;
   accessToken: string;

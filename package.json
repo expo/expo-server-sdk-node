@@ -36,8 +36,7 @@
   "homepage": "https://github.com/expo/expo-server-sdk-node#readme",
   "dependencies": {
     "promise-limit": "^2.7.0",
-    "promise-retry": "^2.0.1",
-    "undici-types": "~7.16.0"
+    "promise-retry": "^2.0.1"
   },
   "devDependencies": {
     "@tsconfig/bases": "1.0.16",

@@ -1244,7 +1244,6 @@ __metadata:
     promise-retry: "npm:^2.0.1"
     typescript: "npm:5.9.3"
     undici: "npm:7.30.0"
-    undici-types: "npm:~7.16.0"
   languageName: unknown
   linkType: soft
 
